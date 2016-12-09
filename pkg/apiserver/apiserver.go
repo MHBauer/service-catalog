@@ -5,6 +5,13 @@ import (
 
 	"k8s.io/kubernetes/pkg/genericapiserver"
 	"k8s.io/kubernetes/pkg/version"
+
+	// an existing one
+	"k8s.io/kubernetes/cmd/kubernetes-discovery/pkg/apis/apiregistration"
+	"k8s.io/kubernetes/cmd/kubernetes-discovery/pkg/apis/apiregistration/v1alpha1"
+	// my new one
+	//"github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog"
+	//"github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1alpha1"
 )
 
 // ServiceCatalogAPIServer contains base GenericAPIServer along with
@@ -58,5 +65,23 @@ func (c CompletedConfig) New() (*ServiceCatalogAPIServer, error) {
 		GenericAPIServer: genericServer,
 	}
 
+	fmt.Println("make and install the apis")
+
+	// creating a group with a name. What is a group?
+	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(apiregistration.GroupName)
+	// giving it v1alpha1 version
+	apiGroupInfo.GroupMeta.GroupVersion = v1alpha1.SchemeGroupVersion
+
+	//v1alpha1storage := map[string]rest.Storage{}
+	//
+	// v1alpha1storage["apiservices"] = apiservice.NewREST(c.RESTOptionsGetter.NewFor(apiregistration.Resource("apiservices")))
+
+	/*
+		apiGroupInfo.VersionedResourcesStorageMap[v1alpha1.SchemeGroupVersion.Version] = v1alpha1storage
+
+		if err := s.GenericAPIServer.InstallAPIGroup(&apiGroupInfo); err != nil {
+			return nil, err
+		}
+	*/
 	return s, nil
 }
