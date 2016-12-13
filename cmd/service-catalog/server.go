@@ -11,11 +11,7 @@ import (
 	// commented out until I know what this does
 	// install all APIs
 	// force REGISTRATION of packages we'll later rely upon
-	_ "k8s.io/kubernetes/cmd/kubernetes-discovery/pkg/apis/apiregistration/install"
-	_ "k8s.io/kubernetes/cmd/kubernetes-discovery/pkg/apis/apiregistration/validation"
-	_ "k8s.io/kubernetes/cmd/kubernetes-discovery/pkg/client/clientset_generated/internalclientset"
-	_ "k8s.io/kubernetes/cmd/kubernetes-discovery/pkg/client/listers/apiregistration/internalversion"
-	_ "k8s.io/kubernetes/cmd/kubernetes-discovery/pkg/client/listers/apiregistration/v1alpha1"
+	_ "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/install"
 
 	_ "k8s.io/kubernetes/pkg/api/install"
 )

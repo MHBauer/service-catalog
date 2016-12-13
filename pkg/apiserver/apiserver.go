@@ -72,17 +72,16 @@ func (c CompletedConfig) New() (*ServiceCatalogAPIServer, error) {
 		GenericAPIServer: genericServer,
 	}
 
-	fmt.Println("make and install the apis")
+	glog.Infoln("make and install the apis")
 
 	// creating a group with a name. What is a group?
 	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(apiregistration.GroupName)
 	// giving it v1alpha1 version
 	apiGroupInfo.GroupMeta.GroupVersion = v1alpha1.SchemeGroupVersion
-
+	//
 	v1alpha1storage := map[string]rest.Storage{}
 	//
 	v1alpha1storage["apiservices"] = apiservice.NewREST(c.RESTOptionsGetter)
-
 	apiGroupInfo.VersionedResourcesStorageMap[v1alpha1.SchemeGroupVersion.Version] = v1alpha1storage
 
 	if err := s.GenericAPIServer.InstallAPIGroup(&apiGroupInfo); err != nil {
