@@ -10,7 +10,9 @@ manages a set of services.  The end-goal of the service-catalog project is to
 provide a way for Kubernetes users to consume services from brokers and easily
 configure their applications to use those services.
 
-<hr>
+---
+
+***
 
 We are currently scoping our **v1** milestone [here](./docs/v1).
 
