@@ -8,11 +8,15 @@ import (
 	"github.com/golang/glog"
 
 	"github.com/kubernetes-incubator/service-catalog/pkg/apiserver"
+	"k8s.io/kubernetes/pkg/registry/generic"
+	"k8s.io/kubernetes/pkg/registry/generic/registry"
+	"k8s.io/kubernetes/pkg/runtime/schema"
 
 	//"k8s.io/kubernetes/pkg/api"
 	//"k8s.io/kubernetes/pkg/apimachinery/registered"
 	"k8s.io/kubernetes/pkg/genericapiserver"
 	genericserveroptions "k8s.io/kubernetes/pkg/genericapiserver/options"
+	"k8s.io/kubernetes/pkg/storage/storagebackend"
 )
 
 // ServiceCatalogServerOptions contains the aggregation of configuration structs for
@@ -137,7 +141,8 @@ func (serverOptions ServiceCatalogServerOptions) runServer() error {
 
 	// configure our own apiserver using the preconfigured genericApiServer
 	config := apiserver.Config{
-		GenericConfig: genericconfig,
+		GenericConfig:     genericconfig,
+		RESTOptionsGetter: &restOptionsFactory{storageConfig: &serverOptions.EtcdOptions.StorageConfig},
 	}
 
 	// finish config
@@ -159,18 +164,16 @@ func (serverOptions ServiceCatalogServerOptions) runServer() error {
 	return nil
 }
 
-/*
 type restOptionsFactory struct {
 	storageConfig *storagebackend.Config
 }
-*/
-/*
-func (f restOptionsFactory) NewFor(resource schema.GroupResource) generic.RESTOptions {
+
+func (f restOptionsFactory) GetRESTOptions(resource schema.GroupResource) (generic.RESTOptions, error) {
 	return generic.RESTOptions{
 		StorageConfig:           f.storageConfig,
 		Decorator:               registry.StorageWithCacher,
 		DeleteCollectionWorkers: 1,
 		EnableGarbageCollection: false,
 		ResourcePrefix:          f.storageConfig.Prefix + "/" + resource.Group + "/" + resource.Resource,
-	}
-}*/
+	}, nil
+}

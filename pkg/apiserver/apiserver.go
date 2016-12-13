@@ -3,7 +3,11 @@ package apiserver
 import (
 	"github.com/golang/glog"
 
+	//"k8s.io/kubernetes/pkg/api/rest"
+	apiservice "k8s.io/kubernetes/cmd/kubernetes-discovery/pkg/registry/apiservice/etcd"
+	"k8s.io/kubernetes/pkg/api/rest"
 	"k8s.io/kubernetes/pkg/genericapiserver"
+	"k8s.io/kubernetes/pkg/registry/generic"
 	"k8s.io/kubernetes/pkg/version"
 
 	// an existing one
@@ -24,6 +28,9 @@ type ServiceCatalogAPIServer struct {
 // to the service catalog.
 type Config struct {
 	GenericConfig *genericapiserver.Config
+
+	// RESTOptionsGetter is used to construct storage for a particular resource
+	RESTOptionsGetter generic.RESTOptionsGetter
 }
 
 // CompletedConfig is an internal type to take advantage of
@@ -72,16 +79,15 @@ func (c CompletedConfig) New() (*ServiceCatalogAPIServer, error) {
 	// giving it v1alpha1 version
 	apiGroupInfo.GroupMeta.GroupVersion = v1alpha1.SchemeGroupVersion
 
-	//v1alpha1storage := map[string]rest.Storage{}
+	v1alpha1storage := map[string]rest.Storage{}
 	//
-	// v1alpha1storage["apiservices"] = apiservice.NewREST(c.RESTOptionsGetter.NewFor(apiregistration.Resource("apiservices")))
+	v1alpha1storage["apiservices"] = apiservice.NewREST(c.RESTOptionsGetter)
 
-	/*
-		apiGroupInfo.VersionedResourcesStorageMap[v1alpha1.SchemeGroupVersion.Version] = v1alpha1storage
+	apiGroupInfo.VersionedResourcesStorageMap[v1alpha1.SchemeGroupVersion.Version] = v1alpha1storage
 
-		if err := s.GenericAPIServer.InstallAPIGroup(&apiGroupInfo); err != nil {
-			return nil, err
-		}
-	*/
+	if err := s.GenericAPIServer.InstallAPIGroup(&apiGroupInfo); err != nil {
+		return nil, err
+	}
+
 	return s, nil
 }
