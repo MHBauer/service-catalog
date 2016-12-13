@@ -14,9 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package servicecatalog
+package v1alpha1
 
 import (
+	"k8s.io/kubernetes/pkg/api/v1"
+
 	kapi "k8s.io/client-go/1.5/pkg/api"
 	kunversioned "k8s.io/client-go/1.5/pkg/api/unversioned"
 )
@@ -28,7 +30,7 @@ import (
 type Broker struct {
 	kunversioned.TypeMeta
 	// Non-namespaced.  The name of this resource in etcd is in ObjectMeta.Name.
-	kapi.ObjectMeta
+	v1.ObjectMeta
 
 	Spec   BrokerSpec
 	Status BrokerStatus

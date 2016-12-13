@@ -1,3 +1,3 @@
 package servicecatalog
 
-const GroupName = "extensions"
+const GroupName = "servicecatalog"

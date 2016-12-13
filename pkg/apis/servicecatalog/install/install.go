@@ -12,7 +12,7 @@ func init() {
 	if err := announced.NewGroupMetaFactory(
 		&announced.GroupMetaFactoryArgs{
 			GroupName:                  servicecatalog.GroupName,
-			VersionPreferenceOrder:     []string{v1beta1.SchemeGroupVersion.Version},
+			VersionPreferenceOrder:     []string{v1alpha1.SchemeGroupVersion.Version},
 			ImportPrefix:               "k8s.io/kubernetes/pkg/apis/extensions",
 			RootScopedKinds:            sets.NewString("service-catalog"),
 			AddInternalObjectsToScheme: servicecatalog.AddToScheme,
