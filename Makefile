@@ -65,6 +65,7 @@ $(BINDIR)/user-broker: contrib/broker/k8s $(shell find contrib/broker/k8s -type 
 	$(DOCKER) $(GO_BUILD) -o $@ $(SC_PKG)/contrib/broker/k8s
 
 apiserver: $(BINDIR)/apiserver
+.PHONY: $(BINDIR)/apiserver
 $(BINDIR)/apiserver: cmd/service-catalog $(shell find pkg/apis/servicecatalog -type f)
 	$(DOCKER) $(GO_BUILD) -o $@ $(SC_PKG)/cmd/service-catalog
 

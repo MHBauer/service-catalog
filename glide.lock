@@ -1,5 +1,5 @@
-hash: 05f68454875f0d6f90fea9cbcfc5cb853b7f1ac874ed27e485d161481daa9f41
-updated: 2016-12-08T01:02:02.362613515-08:00
+hash: 46d64e1302642f2c16d729a0ecd8f7daf070b33169226030f4a5dc9d467ddcd8
+updated: 2016-12-15T14:54:27.856255088-08:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
@@ -129,8 +129,31 @@ imports:
 - name: github.com/gogo/protobuf
   version: e18d7aa8f8c624c915db340349aad4c49b10d173
   subpackages:
+  - gogoproto
+  - plugin/compare
+  - plugin/defaultcheck
+  - plugin/description
+  - plugin/embedcheck
+  - plugin/enumstringer
+  - plugin/equal
+  - plugin/face
+  - plugin/gostring
+  - plugin/marshalto
+  - plugin/oneofcheck
+  - plugin/populate
+  - plugin/size
+  - plugin/stringer
+  - plugin/testgen
+  - plugin/union
+  - plugin/unmarshal
   - proto
+  - protoc-gen-gogo/descriptor
+  - protoc-gen-gogo/generator
+  - protoc-gen-gogo/grpc
+  - protoc-gen-gogo/plugin
   - sortkeys
+  - vanity
+  - vanity/command
 - name: github.com/golang/glog
   version: 44145f04b68cf362d9c4df2182967c2275eaefed
 - name: github.com/golang/groupcache
@@ -145,7 +168,7 @@ imports:
 - name: github.com/google/gofuzz
   version: 44d81051d367757e1c7c6a5a86423ece9afcf63c
 - name: github.com/gorilla/context
-  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+  version: 215affda49addc4c8ef7e2534915df2c8c35c6cd
 - name: github.com/gorilla/handlers
   version: 3a5767ca75ece5f7f1440b1d16975247f8d8b221
 - name: github.com/gorilla/mux
@@ -178,6 +201,10 @@ imports:
   - pbutil
 - name: github.com/mitchellh/mapstructure
   version: 740c764bc6149d3f1806231418adb9f52c11bcbf
+- name: github.com/mxk/go-flowrate
+  version: cca7078d478f8520f85629ad7c68962d31ed7682
+  subpackages:
+  - flowrate
 - name: github.com/pborman/uuid
   version: ca53cad383cad2479bbba7f7a1a05797ec1386e4
 - name: github.com/pkg/errors
@@ -250,6 +277,7 @@ imports:
   version: f1f1a805ed361a0e078bb537e4ea78cd37dcf065
   subpackages:
   - codec
+  - codec/codecgen
 - name: golang.org/x/crypto
   version: 1f22c0103821b9390939b6776727195525381532
   subpackages:
@@ -272,6 +300,7 @@ imports:
   - idna
   - internal/timeseries
   - lex/httplex
+  - proxy
   - trace
   - websocket
 - name: golang.org/x/oauth2
@@ -326,7 +355,7 @@ imports:
 - name: gopkg.in/natefinch/lumberjack.v2
   version: 20b71e5b60d756d3d2f80def009790325acc2b23
 - name: gopkg.in/yaml.v2
-  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
+  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 - name: k8s.io/client-go
   version: 843f7c4f28b1f647f664f883697107d5c02c5acc
   subpackages:
@@ -439,20 +468,19 @@ imports:
   - 1.5/tools/metrics
   - 1.5/transport
 - name: k8s.io/kubernetes
-  version: 6b9a9442855d16e0ff0c02ab0c82b1c1665cccaf
+  version: 12147a3cd6f52b1831c8af34d14d52e2811a4668
   subpackages:
   - pkg/admission
   - pkg/api
   - pkg/api/endpoints
   - pkg/api/errors
+  - pkg/api/errors/storage
   - pkg/api/install
   - pkg/api/meta
-  - pkg/api/meta/metatypes
   - pkg/api/pod
   - pkg/api/resource
   - pkg/api/rest
   - pkg/api/service
-  - pkg/api/unversioned
   - pkg/api/util
   - pkg/api/v1
   - pkg/api/validation
@@ -490,6 +518,7 @@ imports:
   - pkg/apis/extensions/install
   - pkg/apis/extensions/v1beta1
   - pkg/apis/meta/v1
+  - pkg/apis/meta/v1/unstructured
   - pkg/apis/meta/v1/validation
   - pkg/apis/policy
   - pkg/apis/policy/install
@@ -577,7 +606,16 @@ imports:
   - pkg/master/ports
   - pkg/probe
   - pkg/probe/http
+  - pkg/registry/cachesize
+  - pkg/registry/core/endpoint
+  - pkg/registry/core/service
+  - pkg/registry/core/service/allocator
+  - pkg/registry/core/service/etcd
+  - pkg/registry/core/service/ipallocator
+  - pkg/registry/core/service/portallocator
   - pkg/registry/generic
+  - pkg/registry/generic/registry
+  - pkg/registry/generic/rest
   - pkg/runtime
   - pkg/runtime/schema
   - pkg/runtime/serializer
