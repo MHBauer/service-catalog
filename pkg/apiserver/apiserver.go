@@ -20,8 +20,8 @@ import (
 	"github.com/golang/glog"
 	"k8s.io/kubernetes/pkg/api/rest"
 	"k8s.io/kubernetes/pkg/genericapiserver"
-	"k8s.io/kubernetes/pkg/registry/core/service/etcd"
 	"k8s.io/kubernetes/pkg/registry/generic"
+	"k8s.io/kubernetes/pkg/registry/storage/storageclass/etcd"
 	"k8s.io/kubernetes/pkg/version"
 
 	"github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog"
@@ -86,10 +86,12 @@ func (c CompletedConfig) New(optsGetter generic.RESTOptionsGetter) (*ServiceCata
 	apiGroupInfo.GroupMeta.GroupVersion = v1alpha1.SchemeGroupVersion
 
 	v1alpha1storage := map[string]rest.Storage{}
-	v1alpha1storage["servicecatalog"], _ = etcd.NewREST(optsGetter)
+	v1alpha1storage["servicecatalog"] = etcd.NewREST(optsGetter)
 
 	apiGroupInfo.VersionedResourcesStorageMap[v1alpha1.SchemeGroupVersion.Version] = v1alpha1storage
+	glog.Infoln("install the apigroup")
 	if err := s.GenericAPIServer.InstallAPIGroup(&apiGroupInfo); err != nil {
+		glog.Errorln(err)
 		return nil, err
 	}
 
