@@ -18,8 +18,10 @@ package apiserver
 
 import (
 	"github.com/golang/glog"
-	//"k8s.io/kubernetes/pkg/api/rest"
+	"k8s.io/kubernetes/pkg/api/rest"
 	"k8s.io/kubernetes/pkg/genericapiserver"
+	"k8s.io/kubernetes/pkg/registry/core/service/etcd"
+	"k8s.io/kubernetes/pkg/registry/generic"
 	"k8s.io/kubernetes/pkg/version"
 
 	"github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog"
@@ -60,7 +62,7 @@ func (c *Config) Complete() CompletedConfig {
 }
 
 // New creates the server to run.
-func (c CompletedConfig) New() (*ServiceCatalogAPIServer, error) {
+func (c CompletedConfig) New(optsGetter generic.RESTOptionsGetter) (*ServiceCatalogAPIServer, error) {
 	// we need to call new on a "completed" config, which we
 	// should already have, as this is a 'CompletedConfig' and the
 	// only way to get here from there is by Complete()'ing. Thus
@@ -83,12 +85,10 @@ func (c CompletedConfig) New() (*ServiceCatalogAPIServer, error) {
 	// giving it v1alpha1 version
 	apiGroupInfo.GroupMeta.GroupVersion = v1alpha1.SchemeGroupVersion
 
-	// TODO make storage work
-	//v1alpha1storage := map[string]rest.Storage{}
-	//
-	//v1alpha1storage["servicecatalog"] = apiservice.NewREST(c.RESTOptionsGetter.NewFor(apiregistration.Resource("servicecatalog")))
+	v1alpha1storage := map[string]rest.Storage{}
+	v1alpha1storage["servicecatalog"], _ = etcd.NewREST(optsGetter)
 
-	//apiGroupInfo.VersionedResourcesStorageMap[v1alpha1.SchemeGroupVersion.Version] = v1alpha1storage
+	apiGroupInfo.VersionedResourcesStorageMap[v1alpha1.SchemeGroupVersion.Version] = v1alpha1storage
 	if err := s.GenericAPIServer.InstallAPIGroup(&apiGroupInfo); err != nil {
 		return nil, err
 	}

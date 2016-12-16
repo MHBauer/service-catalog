@@ -17,18 +17,19 @@ limitations under the License.
 package server
 
 import (
+	"fmt"
 	"io"
 
-	"github.com/spf13/cobra"
-
 	"github.com/golang/glog"
+	"github.com/spf13/cobra"
+	"k8s.io/kubernetes/pkg/api"
+	genericregistry "k8s.io/kubernetes/pkg/registry/generic/registry"
+	"k8s.io/kubernetes/pkg/runtime/schema"
 
 	"github.com/kubernetes-incubator/service-catalog/pkg/apiserver"
-
-	//"k8s.io/kubernetes/pkg/api"
-	//"k8s.io/kubernetes/pkg/apimachinery/registered"
 	"k8s.io/kubernetes/pkg/genericapiserver"
 	genericserveroptions "k8s.io/kubernetes/pkg/genericapiserver/options"
+	"k8s.io/kubernetes/pkg/registry/generic"
 )
 
 // ServiceCatalogServerOptions contains the aggregation of configuration structs for
@@ -151,6 +152,29 @@ func (serverOptions ServiceCatalogServerOptions) runServer() error {
 		}
 	*/
 
+	resourceConfig := genericapiserver.NewResourceConfig()
+	storageGroupsToEncodingVersion, err := serverOptions.GenericServerRunOptions.StorageGroupsToEncodingVersion()
+	if err != nil {
+		glog.Fatalf("error generating storage version map: %s", err)
+	}
+	storageFactory, err := genericapiserver.BuildDefaultStorageFactory(
+		serverOptions.EtcdOptions.StorageConfig, serverOptions.GenericServerRunOptions.DefaultStorageMediaType, api.Codecs,
+		genericapiserver.NewDefaultResourceEncodingConfig(), storageGroupsToEncodingVersion,
+		[]schema.GroupVersionResource{}, resourceConfig, serverOptions.GenericServerRunOptions.RuntimeConfig)
+
+	restOptionsFactory := &restOptionsFactory{
+		storageFactory: storageFactory,
+		// dunno what these two do
+		enableGarbageCollection: serverOptions.GenericServerRunOptions.EnableGarbageCollection,
+		deleteCollectionWorkers: serverOptions.GenericServerRunOptions.DeleteCollectionWorkers,
+	}
+	// dunno about this either.
+	if serverOptions.GenericServerRunOptions.EnableWatchCache {
+		restOptionsFactory.storageDecorator = genericregistry.StorageWithCacher
+	} else {
+		restOptionsFactory.storageDecorator = generic.UndecoratedStorage
+	}
+
 	// configure our own apiserver using the preconfigured genericApiServer
 	config := apiserver.Config{
 		GenericConfig: genericconfig,
@@ -161,7 +185,8 @@ func (serverOptions ServiceCatalogServerOptions) runServer() error {
 
 	// make the server
 	glog.Infoln("make the server")
-	server, err := completedconfig.New()
+	server, err := completedconfig.New(restOptionsFactory)
+
 	if err != nil {
 		return err
 	}
@@ -175,18 +200,23 @@ func (serverOptions ServiceCatalogServerOptions) runServer() error {
 	return nil
 }
 
-/*
 type restOptionsFactory struct {
-	storageConfig *storagebackend.Config
+	storageFactory          genericapiserver.StorageFactory
+	storageDecorator        generic.StorageDecorator
+	deleteCollectionWorkers int
+	enableGarbageCollection bool
 }
-*/
-/*
-func (f restOptionsFactory) NewFor(resource schema.GroupResource) generic.RESTOptions {
-	return generic.RESTOptions{
-		StorageConfig:           f.storageConfig,
-		Decorator:               registry.StorageWithCacher,
-		DeleteCollectionWorkers: 1,
-		EnableGarbageCollection: false,
-		ResourcePrefix:          f.storageConfig.Prefix + "/" + resource.Group + "/" + resource.Resource,
+
+func (f *restOptionsFactory) GetRESTOptions(resource schema.GroupResource) (generic.RESTOptions, error) {
+	config, err := f.storageFactory.NewConfig(resource)
+	if err != nil {
+		return generic.RESTOptions{}, fmt.Errorf("Unable to find storage config for %v, due to %v", resource, err.Error())
 	}
-}*/
+	return generic.RESTOptions{
+		StorageConfig:           config,
+		Decorator:               f.storageDecorator,
+		DeleteCollectionWorkers: f.deleteCollectionWorkers,
+		EnableGarbageCollection: f.enableGarbageCollection,
+		ResourcePrefix:          f.storageFactory.ResourcePrefix(resource),
+	}, nil
+}
