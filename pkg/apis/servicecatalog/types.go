@@ -17,12 +17,21 @@ limitations under the License.
 package servicecatalog
 
 import (
-	kapi "k8s.io/client-go/1.5/pkg/api"
+	kapi "k8s.io/kubernetes/pkg/api"
+	//kapi "k8s.io/client-go/1.5/pkg/api"
 	kunversioned "k8s.io/client-go/1.5/pkg/api/unversioned"
 	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
 )
 
 // +nonNamespaced=true
+
+// BrokerList is a list of brokers
+type BrokerList struct {
+	metav1.TypeMeta
+	metav1.ListMeta
+
+	Items []Broker
+}
 
 // Broker represents an entity that provides ServiceClasses for use in the
 // service catalog.

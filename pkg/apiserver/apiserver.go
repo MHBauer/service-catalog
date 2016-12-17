@@ -21,11 +21,11 @@ import (
 	"k8s.io/kubernetes/pkg/api/rest"
 	"k8s.io/kubernetes/pkg/genericapiserver"
 	"k8s.io/kubernetes/pkg/registry/generic"
-	"k8s.io/kubernetes/pkg/registry/storage/storageclass/etcd"
 	"k8s.io/kubernetes/pkg/version"
 
 	"github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog"
 	"github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1alpha1"
+	"github.com/kubernetes-incubator/service-catalog/pkg/registry/servicecatalog/etcd"
 )
 
 // ServiceCatalogAPIServer contains base GenericAPIServer along with

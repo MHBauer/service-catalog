@@ -18,11 +18,19 @@ package v1alpha1
 
 import (
 	kunversioned "k8s.io/client-go/1.5/pkg/api/unversioned"
-	kapi "k8s.io/client-go/1.5/pkg/api/v1"
+	kapi "k8s.io/kubernetes/pkg/api"
 	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
 )
 
 // +nonNamespaced=true
+
+// BrokerList is a list of brokers, COME ON.
+type BrokerList struct {
+	metav1.TypeMeta
+	metav1.ListMeta
+
+	Items []Broker
+}
 
 // Broker represents an entity that provides ServiceClasses for use in the
 // service catalog.

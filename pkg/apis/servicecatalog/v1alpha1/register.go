@@ -24,6 +24,7 @@ func Resource(resource string) schema.GroupResource {
 }
 
 var (
+	// SchemeBuilder stuff
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
 	// AddToScheme is exposed for API installation
 	AddToScheme = SchemeBuilder.AddToScheme
@@ -38,6 +39,7 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&metav1.GetOptions{},
 
 		&Broker{},
+		&BrokerList{},
 	)
 	return nil
 }
