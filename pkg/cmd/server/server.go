@@ -23,7 +23,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 	"k8s.io/kubernetes/pkg/api"
-	genericregistry "k8s.io/kubernetes/pkg/registry/generic/registry"
+	//genericregistry "k8s.io/kubernetes/pkg/registry/generic/registry"
 	"k8s.io/kubernetes/pkg/runtime/schema"
 
 	"github.com/kubernetes-incubator/service-catalog/pkg/apiserver"
@@ -169,11 +169,11 @@ func (serverOptions ServiceCatalogServerOptions) runServer() error {
 		deleteCollectionWorkers: serverOptions.GenericServerRunOptions.DeleteCollectionWorkers,
 	}
 	// dunno about this either.
-	if serverOptions.GenericServerRunOptions.EnableWatchCache {
-		restOptionsFactory.storageDecorator = genericregistry.StorageWithCacher
-	} else {
-		restOptionsFactory.storageDecorator = generic.UndecoratedStorage
-	}
+	//if serverOptions.GenericServerRunOptions.EnableWatchCache {
+	//	restOptionsFactory.storageDecorator = genericregistry.StorageWithCacher
+	//} else {
+	restOptionsFactory.storageDecorator = generic.UndecoratedStorage
+	//}
 
 	// configure our own apiserver using the preconfigured genericApiServer
 	config := apiserver.Config{
