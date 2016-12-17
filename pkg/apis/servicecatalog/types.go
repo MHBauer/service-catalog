@@ -18,8 +18,6 @@ package servicecatalog
 
 import (
 	kapi "k8s.io/kubernetes/pkg/api"
-	//kapi "k8s.io/client-go/1.5/pkg/api"
-	kunversioned "k8s.io/client-go/1.5/pkg/api/unversioned"
 	metav1 "k8s.io/kubernetes/pkg/apis/meta/v1"
 )
 
@@ -106,7 +104,7 @@ const (
 
 // ServiceClass represents an offering in the service catalog.
 type ServiceClass struct {
-	kunversioned.TypeMeta
+	metav1.TypeMeta
 	kapi.ObjectMeta
 
 	// BrokerName is the reference to the Broker that provides this service.
@@ -149,7 +147,7 @@ type ServicePlan struct {
 
 // Instance represents a provisioned instance of a ServiceClass.
 type Instance struct {
-	kunversioned.TypeMeta
+	metav1.TypeMeta
 	kapi.ObjectMeta
 
 	Spec   InstanceSpec
@@ -219,7 +217,7 @@ const (
 // Binding represents a "used by" relationship between an application and an
 // Instance.
 type Binding struct {
-	kunversioned.TypeMeta
+	metav1.TypeMeta
 	kapi.ObjectMeta
 
 	Spec   BindingSpec
@@ -233,7 +231,7 @@ type BindingSpec struct {
 	InstanceRef kapi.ObjectReference
 	// AppLabelSelector selects the pods in the Binding's namespace that
 	// should be injected with the results of the binding.  Immutable.
-	AppLabelSelector kunversioned.LabelSelector
+	AppLabelSelector metav1.LabelSelector
 
 	Parameters map[string]interface{}
 
