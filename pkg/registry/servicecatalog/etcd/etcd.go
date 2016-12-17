@@ -24,7 +24,7 @@ func NewREST(optsGetter generic.RESTOptionsGetter) *REST {
 		ObjectNameFunc: func(obj runtime.Object) (string, error) {
 			return obj.(*apis.Broker).Name, nil
 		},
-		PredicateFunc:     registry.MatchAPIService,
+		//PredicateFunc:     registry.MatchAPIService,
 		QualifiedResource: apis.Resource("servicecatalog"),
 
 		CreateStrategy: registry.Strategy,

@@ -26,6 +26,7 @@ import (
 	//genericregistry "k8s.io/kubernetes/pkg/registry/generic/registry"
 	"k8s.io/kubernetes/pkg/runtime/schema"
 
+	"github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1alpha1"
 	"github.com/kubernetes-incubator/service-catalog/pkg/apiserver"
 	"k8s.io/kubernetes/pkg/genericapiserver"
 	genericserveroptions "k8s.io/kubernetes/pkg/genericapiserver/options"
@@ -78,7 +79,7 @@ func NewCommandServer(out io.Writer) *cobra.Command {
 	// we have our own `GroupName`? Is it like the pathPrefix for
 	// etcd?
 	//
-	// options.EtcdOptions.StorageConfig.Codec = api.Codecs.LegacyCodec(registered.EnabledVersionsForGroup(api.GroupName)...)
+	options.EtcdOptions.StorageConfig.Codec = api.Codecs.LegacyCodec(v1alpha1.SchemeGroupVersion)
 
 	// this is the one thing that this program does. It runs the apiserver.
 	cmd := &cobra.Command{
