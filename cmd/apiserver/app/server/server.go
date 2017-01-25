@@ -133,23 +133,19 @@ func (serverOptions ServiceCatalogServerOptions) runServer() error {
 		return err
 	}
 
-	glog.V(4).Info("Setting up authn (disabled)")
+	glog.V(4).Info("Setting up authn")
 	// need to figure out what's throwing the `missing clientCA file` err
-	/*
-		if _, err := genericconfig.ApplyDelegatingAuthenticationOptions(serverOptions.AuthenticationOptions); err != nil {
-			glog.Infoln(err)
-			return err
-		}
-	*/
+	if _, err := genericconfig.ApplyDelegatingAuthenticationOptions(serverOptions.AuthenticationOptions); err != nil {
+		glog.Infoln(err)
+		return err
+	}
 
-	glog.V(4).Infoln("Setting up authz (disabled)")
+	glog.V(4).Infoln("Setting up authz")
 	// having this enabled causes the server to crash for any call
-	/*
-		if _, err := genericconfig.ApplyDelegatingAuthorizationOptions(serverOptions.AuthorizationOptions); err != nil {
-			glog.Infoln(err)
-			return err
-		}
-	*/
+	if _, err := genericconfig.ApplyDelegatingAuthorizationOptions(serverOptions.AuthorizationOptions); err != nil {
+		glog.Infoln(err)
+		return err
+	}
 
 	glog.V(4).Infoln("Creating storage factory")
 	// The API server stores objects using a particular API version for each
