@@ -175,6 +175,8 @@ $(BINDIR)/openapi-gen: .init
 		--v 1 --logtostderr \
 		--go-header-file "vendor/github.com/kubernetes/repo-infra/verify/boilerplate/boilerplate.go.txt" \
 		--input-dirs "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1alpha1" \
+		--input-dirs "k8s.io/kubernetes/pkg/api/v1" \
+		--input-dirs "k8s.io/kubernetes/pkg/apis/meta/v1" \
 		--output-package "github.com/kubernetes-incubator/service-catalog/pkg/openapi"
 	# generate codec
 	$(DOCKER_CMD) $(BUILD_DIR)/update-codecgen.sh
