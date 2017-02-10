@@ -31,14 +31,10 @@ func main() {
 	flag.Parse()
 	// uses the current context in kubeconfig
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	// generates a k8s.io/client-go/1.5/rest.Config
 	if err != nil {
 		panic(err.Error())
 	}
 	// creates the clientset
-	// do I need to fix the generator?
-	// wants a k8s.io/kubernetes/pkg/client/restclient/rest.ClientConfig
-	//config = restclient.RESTClientFor(config)
 	clientset, err := servicecatalog.NewForConfig(config)
 	if err != nil {
 		glog.Fatal(err)
