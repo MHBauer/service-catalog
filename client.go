@@ -41,7 +41,7 @@ func main() {
 	}
 
 	for {
-
+		// we currently fail at the 'List()' part.
 		brokers, err := clientset.Servicecatalog().Brokers().List(v1.ListOptions{})
 		if err != nil {
 			glog.Flush()
