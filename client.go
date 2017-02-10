@@ -12,7 +12,12 @@ import (
 	"k8s.io/kubernetes/pkg/api/v1"
 	"k8s.io/kubernetes/pkg/client/unversioned/clientcmd"
 
+	// TODO: fix this upstream
+	// we shouldn't have to install things to use our own generated client.
+
+	// avoid error `servicecatalog/v1alpha1 is not enabled`
 	_ "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/install"
+	// avoid error `no kind is registered for the type v1.ListOptions`
 	_ "k8s.io/kubernetes/pkg/api/install"
 
 	servicecatalog "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/clientset"
