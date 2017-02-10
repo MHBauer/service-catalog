@@ -1,6 +1,6 @@
 #!/bin/sh
 
-rm -rf bin
+rm -rf bin pkg/client
 make build images
 
 contrib/hack/stop-server.sh

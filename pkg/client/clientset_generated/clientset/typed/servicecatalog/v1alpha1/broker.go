@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/golang/glog"
 	v1alpha1 "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1alpha1"
 	api "k8s.io/kubernetes/pkg/api"
 	v1 "k8s.io/kubernetes/pkg/api/v1"
@@ -124,10 +125,11 @@ func (c *brokers) Get(name string) (result *v1alpha1.Broker, err error) {
 
 // List takes label and field selectors, and returns the list of Brokers that match those selectors.
 func (c *brokers) List(opts v1.ListOptions) (result *v1alpha1.BrokerList, err error) {
+	glog.Info("listing brokers with options ", opts)
 	result = &v1alpha1.BrokerList{}
 	err = c.client.Get().
 		Resource("brokers").
-		VersionedParams(&opts, api.ParameterCodec).
+		VersionedParams(&opts, api.ParameterCodec). // here's where it breaks
 		Do().
 		Into(result)
 	return
