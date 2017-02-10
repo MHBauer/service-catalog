@@ -109,6 +109,10 @@ $(BINDIR)/apiserver: .init .generate_files cmd/apiserver $(NEWEST_GO_FILE)
                 $(BINDIR)/informer-gen
 	touch $@
 
+define gen-bin =
+$(DOCKER_CMD) go build -o $@ $(SC_PKG)/vendor/k8s.io/kubernetes/cmd/libs/go2idl/$(lastword $(subst /, ,$@))
+endef
+
 $(BINDIR)/defaulter-gen: .init cmd/libs/go2idl/defaulter-gen
 	$(DOCKER_CMD) go build -o $@ $(SC_PKG)/cmd/libs/go2idl/defaulter-gen
 
@@ -118,14 +122,15 @@ $(BINDIR)/deepcopy-gen: .init cmd/libs/go2idl/deepcopy-gen
 $(BINDIR)/conversion-gen: cmd/libs/go2idl/conversion-gen
 	$(DOCKER_CMD) go build -o $@ $(SC_PKG)/$^
 
-$(BINDIR)/client-gen:
-	$(DOCKER_CMD) go build -o $@ $(SC_PKG)/vendor/k8s.io/kubernetes/cmd/libs/go2idl/client-gen
 
-$(BINDIR)/lister-gen:
-	$(DOCKER_CMD) go build -o $@ $(SC_PKG)/vendor/k8s.io/kubernetes/cmd/libs/go2idl/lister-gen
+$(BINDIR)/client-gen: .init
+	$(gen-bin)
 
-$(BINDIR)/informer-gen:
-	$(DOCKER_CMD) go build -o $@ $(SC_PKG)/vendor/k8s.io/kubernetes/cmd/libs/go2idl/informer-gen
+$(BINDIR)/lister-gen: .init
+	$(gen-bin)
+
+$(BINDIR)/informer-gen: .init
+	$(gen-bin)
 
 # Regenerate all files if the gen exes changed or any "types.go" files changed
 .generate_files: .init .generate_exes $(TYPES_FILES)
