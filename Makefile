@@ -237,6 +237,9 @@ test-unit: .init build
 test-integration: .init build
 	contrib/hack/setup-kubectl.sh
 	contrib/hack/test-apiserver.sh
+	# client program
+	$(DOCKER_CMD) go build -v -i -o bin/client $(SC_PKG)/test/integration
+	test/integration/tc.sh
 
 clean:
 	rm -rf $(BINDIR)
