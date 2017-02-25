@@ -119,6 +119,7 @@ $(BINDIR)/controller-manager: .init .generate_files cmd/controller-manager $(NEW
                 $(BINDIR)/openapi-gen
 	touch $@
 
+
 $(BINDIR)/defaulter-gen: .init
 	$(DOCKER_CMD) go build -o $@ $(SC_PKG)/vendor/k8s.io/kubernetes/cmd/libs/go2idl/defaulter-gen
 
@@ -218,7 +219,7 @@ $(BINDIR)/openapi-gen: vendor/k8s.io/kubernetes/cmd/libs/go2idl/openapi-gen
 
 # Util targets
 ##############
-verify: .init .generate_files
+verify: .init .generate_files verify-files
 	@echo Running gofmt:
 	@$(DOCKER_CMD) gofmt -l -s $(TOP_SRC_DIRS) > .out 2>&1 || true
 	@bash -c '[ "`cat .out`" == "" ] || \
@@ -246,6 +247,74 @@ verify: .init .generate_files
 	@$(DOCKER_CMD) build/verify-links.sh
 	@echo Running errexit checker:
 	@$(DOCKER_CMD) build/verify-errexit.sh
+
+verify-files:
+	# Generate defaults
+	$(DOCKER_CMD) $(BINDIR)/defaulter-gen \
+		--v 1 --logtostderr \
+		--go-header-file "vendor/github.com/kubernetes/repo-infra/verify/boilerplate/boilerplate.go.txt" \
+		--input-dirs "$(SC_PKG)/pkg/apis/servicecatalog" \
+		--input-dirs "$(SC_PKG)/pkg/apis/servicecatalog/v1alpha1" \
+	  	--extra-peer-dirs "$(SC_PKG)/pkg/apis/servicecatalog" \
+		--extra-peer-dirs "$(SC_PKG)/pkg/apis/servicecatalog/v1alpha1" \
+		--output-file-base "zz_generated.defaults" \
+		--verify-only
+	# Generate deep copies
+	$(DOCKER_CMD) $(BINDIR)/deepcopy-gen \
+		--v 1 --logtostderr \
+		--go-header-file "vendor/github.com/kubernetes/repo-infra/verify/boilerplate/boilerplate.go.txt" \
+		--input-dirs "$(SC_PKG)/pkg/apis/servicecatalog" \
+		--input-dirs "$(SC_PKG)/pkg/apis/servicecatalog/v1alpha1" \
+		--bounding-dirs "github.com/kubernetes-incubator/service-catalog" \
+		--output-file-base zz_generated.deepcopy \
+		--verify-only
+	# Generate conversions
+	$(DOCKER_CMD) $(BINDIR)/conversion-gen \
+		--v 1 --logtostderr \
+		--go-header-file "vendor/github.com/kubernetes/repo-infra/verify/boilerplate/boilerplate.go.txt" \
+		--input-dirs "$(SC_PKG)/pkg/apis/servicecatalog" \
+		--input-dirs "$(SC_PKG)/pkg/apis/servicecatalog/v1alpha1" \
+		--output-file-base zz_generated.conversion \
+		--verify-only
+	# the previous three directories will be changed from kubernetes to apimachinery in the future
+	# Generate the internal clientset (pkg/client/clientset_generated/internalclientset)
+	$(DOCKER_CMD) $(BINDIR)/client-gen \
+		--input-base "github.com/kubernetes-incubator/service-catalog/pkg/apis/" \
+		--input servicecatalog/ \
+		--clientset-path "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/" \
+		--clientset-name internalclientset \
+		--go-header-file "vendor/github.com/kubernetes/repo-infra/verify/boilerplate/boilerplate.go.txt"
+	# Generate the versioned clientset (pkg/client/clientset_generated/clientset)
+	$(DOCKER_CMD) $(BINDIR)/client-gen --input-base github.com/kubernetes-incubator/service-catalog/pkg/apis/ \
+		--input servicecatalog/v1alpha1 \
+		--clientset-path github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/ \
+		--clientset-name clientset \
+		--go-header-file vendor/github.com/kubernetes/repo-infra/verify/boilerplate/boilerplate.go.txt \
+		--verify-only
+	# generate lister
+	$(DOCKER_CMD) $(BINDIR)/lister-gen \
+		--input-dirs="github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog" \
+		--input-dirs="github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1alpha1" \
+		--output-package "github.com/kubernetes-incubator/service-catalog/pkg/client/listers" \
+		--go-header-file vendor/github.com/kubernetes/repo-infra/verify/boilerplate/boilerplate.go.txt \
+		--verify-only
+	# generate informer
+	$(DOCKER_CMD) $(BINDIR)/informer-gen \
+		--go-header-file "vendor/github.com/kubernetes/repo-infra/verify/boilerplate/boilerplate.go.txt" \
+		--input-dirs "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog" \
+		--input-dirs "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1alpha1" \
+		--internal-clientset-package "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/internalclientset" \
+		--versioned-clientset-package "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/clientset" \
+		--listers-package "github.com/kubernetes-incubator/service-catalog/pkg/client/listers" \
+		--output-package "github.com/kubernetes-incubator/service-catalog/pkg/client/informers" \
+		--verify-only
+	# generate openapi
+	$(DOCKER_CMD) $(BINDIR)/openapi-gen \
+		--v 1 --logtostderr \
+		--go-header-file "vendor/github.com/kubernetes/repo-infra/verify/boilerplate/boilerplate.go.txt" \
+		--input-dirs "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1alpha1,k8s.io/kubernetes/pkg/api/v1,k8s.io/kubernetes/pkg/apis/meta/v1" \
+		--output-package "github.com/kubernetes-incubator/service-catalog/pkg/openapi" \
+		--verify-only
 
 format: .init
 	$(DOCKER_CMD) gofmt -w -s $(TOP_SRC_DIRS)
