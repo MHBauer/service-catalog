@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: svc-cat-controller
+spec:
+  containers:
+    - name: controller
+      image: quay.io/kubernetes-service-catalog/controller-manager:canary
+      imagePullPolicy: IfNotPresent
+      args:
+      - --port
+      - "8080"
+      - --service-catalog-api-server-url
+      - apiserver-service.default.svc.cluster.local
+      - -v
+      - "10"

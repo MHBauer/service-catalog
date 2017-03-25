@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: svc-cat-apiserver
+  labels:
+    pod: svc-cat-api
+spec:
+  containers:
+  - name: apiserver
+    image: quay.io/kubernetes-service-catalog/apiserver:canary
+    imagePullPolicy: IfNotPresent
+    args:
+    - --secure-port
+    - "0"
+    - --insecure-bind-address
+    - 0.0.0.0
+    - --insecure-port
+    - "8080"
+    - --storage-type
+    - etcd
+    - --etcd-servers
+    - http://localhost:2379
+    - -v
+    - "10"
+    ports:
+      - protocol: TCP
+        containerPort: 8080
+  - name: etcd
+    image: quay.io/coreos/etcd:latest
+    imagePullPolicy: IfNotPresent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apiserver-service
+spec:
+  selector:
+    pod: svc-cat-api
+  ports:
+  - name: api-insecure 
+    protocol: TCP
+    port: 80
+    targetPort: 8080
+    nodePort: 30080
+  type: NodePort

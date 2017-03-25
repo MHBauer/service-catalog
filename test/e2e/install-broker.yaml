@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cdb-broker-pod
+  labels:
+    app: cdb-broker
+spec:
+  containers:
+  - name: couchdb
+    image: couchdb
+    imagePullPolicy: IfNotPresent
+    env:
+    - name: COUCHDB_USER
+      value: admin
+    - name: COUCHDB_PASSWORD
+      value: password
+    ports:
+      - protocol: TCP
+        containerPort: 5934
+  - name: broker
+    image: duglin/sb
+    imagePullPolicy: Always
+    ports:
+      - protocol: TCP
+        containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cdb-broker
+  labels:
+    app: cdb-broker
+spec:
+  selector:
+    app: cdb-broker
+  ports:
+  - name: broker 
+    protocol: TCP
+    port: 80
+    targetPort: 3000
+  - name: broker-service
+    protocol: TCP
+    port: 5984
+    targetPort: 5984
+  type: NodePort

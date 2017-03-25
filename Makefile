@@ -41,7 +41,7 @@ endif
 NEWEST_GO_FILE = $(shell find $(SRC_DIRS) -name \*.go -exec $(STAT) {} \; \
                    | sort -r | head -n 1 | sed "s/.* //")
 TYPES_FILES    = $(shell find pkg/apis -name types.go)
-GO_VERSION     = 1.7.3
+GO_VERSION     = 1.8
 
 PLATFORM?=linux
 ARCH?=amd64
@@ -235,7 +235,8 @@ coverage: .init
 	$(DOCKER_CMD) contrib/hack/coverage.sh --html "$(COVERAGE)" \
 	  $(addprefix ./,$(TEST_DIRS))
 
-test: .init build test-unit test-integration
+.PHONY: test test-unit test-integration test-e2e
+test: .init build test-unit test-integration test-e2e
 
 test-unit: .init build
 	@echo Running tests:
@@ -248,6 +249,10 @@ test-integration: .init $(scBuildImageTarget) build
 	contrib/hack/test-apiserver.sh
 	# golang integration tests
 	$(DOCKER_CMD) test/integration.sh
+
+test-e2e: .init build
+# this does not run in docker, because it requires docker 
+	test/e2e.sh
 
 clean: clean-bin clean-deps clean-build-image clean-generated clean-coverage
 

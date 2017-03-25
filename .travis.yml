@@ -6,7 +6,7 @@ cache:
   directories:
   - .glide
 script:
-- make verify build test images
+- make test-e2e
 deploy:
   provider: script
   script: scripts/deploy.sh
