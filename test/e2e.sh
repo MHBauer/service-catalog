@@ -19,7 +19,10 @@ set -o nounset
 set -o pipefail
 
 # this script resides in the `test/` folder at the root of the project
-KUBE_ROOT=$(realpath $(dirname "${BASH_SOURCE}")/../vendor/k8s.io/kubernetes)
+# realpath doesn't exist on trusty ubuntu which is what travis runs in...
+#KUBE_ROOT=$(realpath $(dirname "${BASH_SOURCE}")/../vendor/k8s.io/kubernetes)
+# script should be running in the repo root, so access vendor directly
+KUBE_ROOT=$(pwd -P)/vendor/k8s.io/kubernetes
 source "${KUBE_ROOT}/hack/lib/init.sh"
 
 cleanup () {
