@@ -44,6 +44,8 @@ kubectl () {
 #trap cleanup EXIT
 
 sudo mkdir -p /var/lib/kubelet
+mount
+mount --make-shared /
 #start the localkube in docker
 docker run --name svc-cat-lk -d -it --privileged --volume=/:/rootfs:ro --volume=/sys:/sys:rw     --volume=/var/lib/docker/:/var/lib/docker:rw --volume=/var/lib/dockershim/sandbox:/var/lib/dockershim/sandbox:rw     --volume=/var/lib/kubelet/:/var/lib/kubelet:rw,shared     --volume=/var/run:/var/run:rw     --net=host -P brahmaroutu/localkube ./localkube --containerized
 
