@@ -18,6 +18,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+set -o xtrace
+
 # this script resides in the `test/` folder at the root of the project
 # realpath doesn't exist on trusty ubuntu which is what travis runs in...
 #KUBE_ROOT=$(realpath $(dirname "${BASH_SOURCE}")/../vendor/k8s.io/kubernetes)
@@ -41,6 +43,7 @@ kubectl () {
 # uncomment this at the end to clean everything up
 #trap cleanup EXIT
 
+mkdir -p /var/lib/kubelet
 #start the localkube in docker
 docker run --name svc-cat-lk -d -it --privileged --volume=/:/rootfs:ro --volume=/sys:/sys:rw     --volume=/var/lib/docker/:/var/lib/docker:rw --volume=/var/lib/dockershim/sandbox:/var/lib/dockershim/sandbox:rw     --volume=/var/lib/kubelet/:/var/lib/kubelet:rw,shared     --volume=/var/run:/var/run:rw     --net=host -P brahmaroutu/localkube ./localkube --containerized
 
