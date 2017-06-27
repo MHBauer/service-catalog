@@ -44,7 +44,7 @@ const (
 	defaultPort                         = 10000
 	defaultK8sKubeconfigPath            = "./kubeconfig"
 	defaultServiceCatalogKubeconfigPath = "./service-catalog-kubeconfig"
-	defaultOSBAPIContextProfile         = true
+	defaultOSBAPIPreferredVersion       = "2.12"
 	defaultConcurrentSyncs              = 5
 	defaultLeaderElectionNamespace      = "kube-system"
 )
@@ -61,7 +61,7 @@ func NewControllerManagerServer() *ControllerManagerServer {
 			ServiceCatalogKubeconfigPath: defaultServiceCatalogKubeconfigPath,
 			ResyncInterval:               defaultResyncInterval,
 			BrokerRelistInterval:         defaultBrokerRelistInterval,
-			OSBAPIContextProfile:         defaultOSBAPIContextProfile,
+			OSBAPIPreferredVersion:       defaultOSBAPIPreferredVersion,
 			ConcurrentSyncs:              defaultConcurrentSyncs,
 			LeaderElection:               leaderelection.DefaultLeaderElectionConfiguration(),
 			LeaderElectionNamespace:      defaultLeaderElectionNamespace,
@@ -84,7 +84,7 @@ func (s *ControllerManagerServer) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&s.ServiceCatalogKubeconfigPath, "service-catalog-kubeconfig", "", "Path to service-catalog kubeconfig")
 	fs.DurationVar(&s.ResyncInterval, "resync-interval", s.ResyncInterval, "The interval on which the controller will resync its informers")
 	fs.DurationVar(&s.BrokerRelistInterval, "broker-relist-interval", s.BrokerRelistInterval, "The interval on which a broker's catalog is relisted after the broker becomes ready")
-	fs.BoolVar(&s.OSBAPIContextProfile, "enable-osb-api-context-profile", s.OSBAPIContextProfile, "Whether or not to send the proposed optional OpenServiceBroker API Context Profile field")
+	fs.StringVar(&s.OSBAPIPreferredVersion, "osb-api-preferred-version", s.OSBAPIPreferredVersion, "The string to send as the version header.")
 	fs.BoolVar(&s.EnableProfiling, "profiling", s.EnableProfiling, "Enable profiling via web interface host:port/debug/pprof/")
 	fs.BoolVar(&s.EnableContentionProfiling, "contention-profiling", s.EnableContentionProfiling, "Enable lock contention profiling, if profiling is enabled")
 	leaderelection.BindFlags(&s.LeaderElection, fs)

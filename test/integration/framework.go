@@ -17,6 +17,7 @@ limitations under the License.
 package integration
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -58,12 +59,11 @@ func getFreshApiserverAndClient(
 	newEmptyObj func() runtime.Object,
 ) (servicecatalogclient.Interface, func()) {
 	securePort := rand.Intn(31743) + 1024
-	insecurePort := rand.Intn(31743) + 1024
-	insecureAddr := fmt.Sprintf("http://localhost:%d", insecurePort)
+	secureAddr := fmt.Sprintf("https://localhost:%d", securePort)
 	stopCh := make(chan struct{})
 	serverFailed := make(chan struct{})
 	shutdown := func() {
-		t.Logf("Shutting down server on ports: %d and %d", insecurePort, securePort)
+		t.Logf("Shutting down server on port %d", securePort)
 		close(stopCh)
 	}
 
@@ -94,7 +94,6 @@ func getFreshApiserverAndClient(
 			StopCh:                stopCh,
 			StandaloneMode:        true, // this must be true because we have no kube server for integration.
 		}
-		options.InsecureServingOptions.BindPort = insecurePort
 		options.SecureServingOptions.ServingOptions.BindPort = securePort
 		options.SecureServingOptions.ServerCert.CertDirectory = certDir
 		options.EtcdOptions.StorageConfig.ServerList = []string{"http://localhost:2379"}
@@ -104,13 +103,15 @@ func getFreshApiserverAndClient(
 		}
 	}()
 
-	if err := waitForApiserverUp(insecureAddr, serverFailed); err != nil {
+	if err := waitForApiserverUp(secureAddr, serverFailed); err != nil {
 		t.Fatalf("%v", err)
 	}
 
 	config := &restclient.Config{}
-	config.Host = insecureAddr
-	config.Insecure = true
+	config.Host = secureAddr
+	config.CertFile = secureServingOptions.ServerCert.CertKey.CertFile
+	config.KeyFile = secureServingOptions.ServerCert.CertKey.KeyFile
+	//config.CAFile = secureServingOptions.ServerCert.CACertFile
 	clientset, err := servicecatalogclient.NewForConfig(config)
 	if nil != err {
 		t.Fatal("can't make the client from the config", err)
@@ -123,6 +124,12 @@ func waitForApiserverUp(serverURL string, stopCh <-chan struct{}) error {
 	timeout := 30 * time.Second
 	startWaiting := time.Now()
 	tries := 0
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
 	return wait.PollImmediate(interval, timeout,
 		func() (bool, error) {
 			select {
@@ -131,7 +138,7 @@ func waitForApiserverUp(serverURL string, stopCh <-chan struct{}) error {
 				return true, fmt.Errorf("apiserver failed")
 			default:
 				glog.Infof("Waiting for : %#v", serverURL)
-				_, err := http.Get(serverURL)
+				_, err := client.Get(serverURL)
 				if err == nil {
 					glog.Infof("Found server after %v tries and duration %v",
 						tries, time.Since(startWaiting))

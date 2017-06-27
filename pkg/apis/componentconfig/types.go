@@ -65,7 +65,7 @@ type ControllerManagerConfiguration struct {
 
 	// Whether or not to send the proposed optional
 	// OpenServiceBroker API Context Profile field
-	OSBAPIContextProfile bool
+	OSBAPIPreferredVersion string
 
 	// ConcurrentSyncs is the number of resources, per resource type,
 	// that are allowed to sync concurrently. Larger number = more responsive
