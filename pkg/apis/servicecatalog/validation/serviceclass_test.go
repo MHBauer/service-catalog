@@ -33,7 +33,7 @@ func validServiceClass() *servicecatalog.ServiceClass {
 		BrokerName:  "test-broker",
 		ExternalID:  "1234-4354a-49b",
 		Description: "service description",
-		Plans: []servicecatalog.ServicePlan{
+		Plans: []servicecatalog.Plan{
 			{
 				Name:        "test-plan",
 				ExternalID:  "40d-0983-1b89",

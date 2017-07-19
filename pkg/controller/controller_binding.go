@@ -136,9 +136,18 @@ func (c *controller) reconcileBinding(binding *v1alpha1.Binding) error {
 		return fmt.Errorf("Ongoing Asynchronous operation")
 	}
 
-	serviceClass, servicePlan, brokerName, brokerClient, err := c.getServiceClassPlanAndBrokerForBinding(instance, binding)
+	serviceClass, plan, brokerName, brokerClient, err := c.getServiceClassPlanAndBrokerForBinding(instance, binding)
 	if err != nil {
-		return err
+		glog.Warning("couldn't get the things")
+		return err // retry later
+	}
+	if glog.V(6) {
+		glog.Infof("trying to get details of plan %+v", plan)
+	}
+	servicePlan, err := c.getServicePlan(plan)
+	if err != nil {
+		glog.Warning("couldn't get the plan")
+		return err // retry later
 	}
 
 	if !isPlanBindable(serviceClass, servicePlan) {

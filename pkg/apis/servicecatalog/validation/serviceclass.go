@@ -88,11 +88,40 @@ func ValidateServiceClass(serviceclass *sc.ServiceClass) field.ErrorList {
 	planNames := sets.NewString()
 	for i, plan := range serviceclass.Plans {
 		planPath := field.NewPath("plans").Index(i)
-		allErrs = append(allErrs, validateServicePlan(plan, planPath)...)
+		allErrs = append(allErrs, validatePlan(plan, planPath)...)
 
 		if planNames.Has(plan.Name) {
 			allErrs = append(allErrs, field.Invalid(planPath.Child("name"), plan.Name, "each plan must have a unique name"))
 		}
+	}
+
+	return allErrs
+}
+
+// validateServicePlan validates the fields of a single ServicePlan and
+// returns a list of errors.
+func validatePlan(plan sc.Plan, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	// check the reference
+	// for _, msg := range apivalidation.NameIsDNSSubdomain(spec.ServiceClassName, false /* prefix */) {
+	// allErrs = append(allErrs, field.Invalid(fldPath.Child("servicePlanRef", "name"), spec.ServicePlanRef.Name, msg))
+	// }
+
+	for _, msg := range validateServicePlanName(plan.Name) {
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("name"), plan.Name, msg))
+	}
+
+	if "" == plan.ExternalID {
+		allErrs = append(allErrs, field.Required(fldPath.Child("externalID"), "externalID is required"))
+	}
+
+	if "" == plan.Description {
+		allErrs = append(allErrs, field.Required(field.NewPath("description"), "description is required"))
+	}
+
+	for _, msg := range validateExternalID(plan.ExternalID) {
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("externalID"), plan.ExternalID, msg))
 	}
 
 	return allErrs

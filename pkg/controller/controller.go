@@ -62,6 +62,7 @@ func NewController(
 	serviceCatalogClient servicecatalogclientset.ServicecatalogV1alpha1Interface,
 	brokerInformer informers.BrokerInformer,
 	serviceClassInformer informers.ServiceClassInformer,
+	servicePlanInformer informers.ServicePlanInformer,
 	instanceInformer informers.InstanceInformer,
 	bindingInformer informers.BindingInformer,
 	brokerClientCreateFunc osb.CreateFunc,
@@ -97,6 +98,8 @@ func NewController(
 	})
 	controller.serviceClassLister = serviceClassInformer.Lister()
 
+	controller.servicePlanLister = servicePlanInformer.Lister()
+
 	instanceInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    controller.instanceAdd,
 		UpdateFunc: controller.instanceUpdate,
@@ -130,6 +133,7 @@ type controller struct {
 	brokerClientCreateFunc osb.CreateFunc
 	brokerLister           listers.BrokerLister
 	serviceClassLister     listers.ServiceClassLister
+	servicePlanLister      listers.ServicePlanLister
 	instanceLister         listers.InstanceLister
 	bindingLister          listers.BindingLister
 	brokerRelistInterval   time.Duration
@@ -207,7 +211,7 @@ func worker(queue workqueue.RateLimitingInterface, resourceType string, maxRetri
 // getServiceClassPlanAndBroker is a sequence of operations that's done in couple of
 // places so this method fetches the Service Class, Service Plan and creates
 // a brokerClient to use for that method given an Instance.
-func (c *controller) getServiceClassPlanAndBroker(instance *v1alpha1.Instance) (*v1alpha1.ServiceClass, *v1alpha1.ServicePlan, string, osb.Client, error) {
+func (c *controller) getServiceClassPlanAndBroker(instance *v1alpha1.Instance) (*v1alpha1.ServiceClass, *v1alpha1.Plan, string, osb.Client, error) {
 	serviceClass, err := c.serviceClassLister.Get(instance.Spec.ServiceClassName)
 	if err != nil {
 		s := fmt.Sprintf("Instance \"%s/%s\" references a non-existent ServiceClass %q", instance.Namespace, instance.Name, instance.Spec.ServiceClassName)
@@ -287,7 +291,7 @@ func (c *controller) getServiceClassPlanAndBroker(instance *v1alpha1.Instance) (
 // getServiceClassPlanAndBrokerForBinding is a sequence of operations that's
 // done to validate service plan, service class exist, and handles creating
 // a brokerclient to use for a given Instance.
-func (c *controller) getServiceClassPlanAndBrokerForBinding(instance *v1alpha1.Instance, binding *v1alpha1.Binding) (*v1alpha1.ServiceClass, *v1alpha1.ServicePlan, string, osb.Client, error) {
+func (c *controller) getServiceClassPlanAndBrokerForBinding(instance *v1alpha1.Instance, binding *v1alpha1.Binding) (*v1alpha1.ServiceClass, *v1alpha1.Plan, string, osb.Client, error) {
 	serviceClass, err := c.serviceClassLister.Get(instance.Spec.ServiceClassName)
 	if err != nil {
 		s := fmt.Sprintf("Binding \"%s/%s\" references a non-existent ServiceClass %q", binding.Namespace, binding.Name, instance.Spec.ServiceClassName)
@@ -362,6 +366,14 @@ func (c *controller) getServiceClassPlanAndBrokerForBinding(instance *v1alpha1.I
 	}
 
 	return serviceClass, servicePlan, broker.Name, brokerClient, nil
+}
+
+// getServiceClassPlanAndBrokerForBinding is a sequence of operations that's
+// done to validate service plan, service class exist, and handles creating
+// a brokerclient to use for a given Instance.
+func (c *controller) getServicePlan(plan *v1alpha1.Plan) (*v1alpha1.ServicePlan, error) {
+	// use the ref to get the real plan
+	return c.servicePlanLister.Get(plan.PlanRef.Name)
 }
 
 // Broker utility methods - move?
@@ -479,65 +491,65 @@ func convertCatalog(in *osb.CatalogResponse) ([]*v1alpha1.ServiceClass, error) {
 	return ret, nil
 }
 
-func convertServicePlans(plans []osb.Plan) ([]v1alpha1.ServicePlan, error) {
-	ret := make([]v1alpha1.ServicePlan, len(plans))
+func convertServicePlans(plans []osb.Plan) ([]v1alpha1.Plan, error) {
+	ret := make([]v1alpha1.Plan, len(plans))
 	for i := range plans {
-		ret[i] = v1alpha1.ServicePlan{
+		ret[i] = v1alpha1.Plan{
 			Name:        plans[i].Name,
 			ExternalID:  plans[i].ID,
 			Free:        (plans[i].Free != nil && *plans[i].Free),
 			Description: plans[i].Description,
 		}
-
-		if plans[i].Bindable != nil {
-			b := *plans[i].Bindable
-			ret[i].Bindable = &b
-		}
-
-		if plans[i].Metadata != nil {
-			metadata, err := json.Marshal(plans[i].Metadata)
-			if err != nil {
-				err = fmt.Errorf("Failed to marshal metadata\n%+v\n %v", plans[i].Metadata, err)
-				glog.Error(err)
-				return nil, err
+		/*
+			if plans[i].Bindable != nil {
+				b := *plans[i].Bindable
+				ret[i].Bindable = &b
 			}
-			ret[i].ExternalMetadata = &runtime.RawExtension{Raw: metadata}
-		}
 
-		if schemas := plans[i].AlphaParameterSchemas; schemas != nil {
-			if instanceSchemas := schemas.ServiceInstances; instanceSchemas != nil {
-				if instanceCreateSchema := instanceSchemas.Create; instanceCreateSchema != nil && instanceCreateSchema.Parameters != nil {
-					schema, err := json.Marshal(instanceCreateSchema.Parameters)
-					if err != nil {
-						err = fmt.Errorf("Failed to marshal instance create schema \n%+v\n %v", instanceCreateSchema.Parameters, err)
-						glog.Error(err)
-						return nil, err
-					}
-					ret[i].AlphaInstanceCreateParameterSchema = &runtime.RawExtension{Raw: schema}
+			if plans[i].Metadata != nil {
+				metadata, err := json.Marshal(plans[i].Metadata)
+				if err != nil {
+					err = fmt.Errorf("Failed to marshal metadata\n%+v\n %v", plans[i].Metadata, err)
+					glog.Error(err)
+					return nil, err
 				}
-				if instanceUpdateSchema := instanceSchemas.Update; instanceUpdateSchema != nil && instanceUpdateSchema.Parameters != nil {
-					schema, err := json.Marshal(instanceUpdateSchema.Parameters)
-					if err != nil {
-						err = fmt.Errorf("Failed to marshal instance update schema \n%+v\n %v", instanceUpdateSchema.Parameters, err)
-						glog.Error(err)
-						return nil, err
+				ret[i].ExternalMetadata = &runtime.RawExtension{Raw: metadata}
+			}
+
+			if schemas := plans[i].AlphaParameterSchemas; schemas != nil {
+				if instanceSchemas := schemas.ServiceInstances; instanceSchemas != nil {
+					if instanceCreateSchema := instanceSchemas.Create; instanceCreateSchema != nil && instanceCreateSchema.Parameters != nil {
+						schema, err := json.Marshal(instanceCreateSchema.Parameters)
+						if err != nil {
+							err = fmt.Errorf("Failed to marshal instance create schema \n%+v\n %v", instanceCreateSchema.Parameters, err)
+							glog.Error(err)
+							return nil, err
+						}
+						ret[i].AlphaInstanceCreateParameterSchema = &runtime.RawExtension{Raw: schema}
 					}
-					ret[i].AlphaInstanceUpdateParameterSchema = &runtime.RawExtension{Raw: schema}
+					if instanceUpdateSchema := instanceSchemas.Update; instanceUpdateSchema != nil && instanceUpdateSchema.Parameters != nil {
+						schema, err := json.Marshal(instanceUpdateSchema.Parameters)
+						if err != nil {
+							err = fmt.Errorf("Failed to marshal instance update schema \n%+v\n %v", instanceUpdateSchema.Parameters, err)
+							glog.Error(err)
+							return nil, err
+						}
+						ret[i].AlphaInstanceUpdateParameterSchema = &runtime.RawExtension{Raw: schema}
+					}
+				}
+				if bindingSchemas := schemas.ServiceBindings; bindingSchemas != nil {
+					if bindingCreateSchema := bindingSchemas.Create; bindingCreateSchema != nil && bindingCreateSchema.Parameters != nil {
+						schema, err := json.Marshal(bindingCreateSchema.Parameters)
+						if err != nil {
+							err = fmt.Errorf("Failed to marshal binding create schema \n%+v\n %v", bindingCreateSchema.Parameters, err)
+							glog.Error(err)
+							return nil, err
+						}
+						ret[i].AlphaBindingCreateParameterSchema = &runtime.RawExtension{Raw: schema}
+					}
 				}
 			}
-			if bindingSchemas := schemas.ServiceBindings; bindingSchemas != nil {
-				if bindingCreateSchema := bindingSchemas.Create; bindingCreateSchema != nil && bindingCreateSchema.Parameters != nil {
-					schema, err := json.Marshal(bindingCreateSchema.Parameters)
-					if err != nil {
-						err = fmt.Errorf("Failed to marshal binding create schema \n%+v\n %v", bindingCreateSchema.Parameters, err)
-						glog.Error(err)
-						return nil, err
-					}
-					ret[i].AlphaBindingCreateParameterSchema = &runtime.RawExtension{Raw: schema}
-				}
-			}
-		}
-
+		*/
 	}
 	return ret, nil
 }

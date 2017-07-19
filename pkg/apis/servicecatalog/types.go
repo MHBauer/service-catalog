@@ -191,7 +191,7 @@ type ServiceClass struct {
 
 	// Plans is the list of ServicePlans for this ServiceClass.  All
 	// ServiceClasses have at least one ServicePlan.
-	Plans []ServicePlan
+	Plans []Plan
 
 	// PlanUpdatable indicates whether instances provisioned from this
 	// ServiceClass may change ServicePlans after being provisioned.
@@ -226,8 +226,41 @@ type ServiceClass struct {
 	AlphaRequires []string
 }
 
+type Plan struct {
+	// PlanRef is a reference to the full plan details.
+	PlanRef v1.LocalObjectReference `json:"planRef"`
+
+	// Name is the CLI-friendly name of this ServicePlan.
+	Name string
+
+	// ExternalID is the identity of this object for use with the OSB API.
+	//
+	// Immutable.
+	ExternalID string
+
+	// Description is a short description of this ServicePlan.
+	Description string
+
+	// Free indicates whether this ServicePlan is available at no cost.
+	Free bool
+}
+
+// ServicePlanList is a list of ServicePlans.
+type ServicePlanList struct {
+	metav1.TypeMeta
+	metav1.ListMeta
+
+	Items []ServicePlan
+}
+
+// +genclient=true
+// +nonNamespaced=true
+
 // ServicePlan represents a tier of a ServiceClass.
 type ServicePlan struct {
+	metav1.TypeMeta
+	metav1.ObjectMeta
+
 	// Name is the CLI-friendly name of this ServicePlan.
 	Name string
 
@@ -273,6 +306,10 @@ type ServicePlan struct {
 	// AlphaBindingCreateParameterSchema is the schema for the parameters that
 	// may be supplied binding to an Instance on this plan.
 	AlphaBindingCreateParameterSchema *runtime.RawExtension
+
+	// ServiceClassRef is a reference to the service class that
+	// owns this plan.
+	ServiceClassRef v1.LocalObjectReference `json:"serviceClassRef"`
 }
 
 // InstanceList is a list of instances.

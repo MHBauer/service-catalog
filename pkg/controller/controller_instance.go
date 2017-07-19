@@ -545,7 +545,7 @@ func (c *controller) pollInstanceInternal(instance *v1alpha1.Instance) error {
 	return c.pollInstance(serviceClass, servicePlan, brokerName, brokerClient, instance)
 }
 
-func (c *controller) pollInstance(serviceClass *v1alpha1.ServiceClass, servicePlan *v1alpha1.ServicePlan, brokerName string, brokerClient osb.Client, instance *v1alpha1.Instance) error {
+func (c *controller) pollInstance(serviceClass *v1alpha1.ServiceClass, servicePlan *v1alpha1.Plan, brokerName string, brokerClient osb.Client, instance *v1alpha1.Instance) error {
 	// There are some conditions that are different if we're
 	// deleting, this is more readable than checking the
 	// timestamps in various places.
@@ -737,7 +737,7 @@ func (c *controller) pollInstance(serviceClass *v1alpha1.ServiceClass, servicePl
 	return nil
 }
 
-func findServicePlan(name string, plans []v1alpha1.ServicePlan) *v1alpha1.ServicePlan {
+func findServicePlan(name string, plans []v1alpha1.Plan) *v1alpha1.Plan {
 	for _, plan := range plans {
 		if name == plan.Name {
 			return &plan

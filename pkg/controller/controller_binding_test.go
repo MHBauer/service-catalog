@@ -146,6 +146,7 @@ func TestReconcileBindingWithSecretConflict(t *testing.T) {
 	sharedInformers.Brokers().Informer().GetStore().Add(getTestBroker())
 	sharedInformers.ServiceClasses().Informer().GetStore().Add(getTestServiceClass())
 	sharedInformers.Instances().Informer().GetStore().Add(getTestInstanceWithStatus(v1alpha1.ConditionTrue))
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlan())
 
 	binding := &v1alpha1.Binding{
 		ObjectMeta: metav1.ObjectMeta{Name: testBindingName, Namespace: testNamespace},
@@ -220,6 +221,7 @@ func TestReconcileBindingWithParameters(t *testing.T) {
 	sharedInformers.Brokers().Informer().GetStore().Add(getTestBroker())
 	sharedInformers.ServiceClasses().Informer().GetStore().Add(getTestServiceClass())
 	sharedInformers.Instances().Informer().GetStore().Add(getTestInstanceWithStatus(v1alpha1.ConditionTrue))
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlan())
 
 	binding := &v1alpha1.Binding{
 		ObjectMeta: metav1.ObjectMeta{Name: testBindingName, Namespace: testNamespace},
@@ -326,6 +328,7 @@ func TestReconcileBindingNonbindableServiceClass(t *testing.T) {
 	sharedInformers.Brokers().Informer().GetStore().Add(getTestBroker())
 	sharedInformers.ServiceClasses().Informer().GetStore().Add(getTestNonbindableServiceClass())
 	sharedInformers.Instances().Informer().GetStore().Add(getTestNonbindableInstance())
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlanNonbindable())
 
 	binding := &v1alpha1.Binding{
 		ObjectMeta: metav1.ObjectMeta{Name: testBindingName, Namespace: testNamespace},
@@ -388,6 +391,7 @@ func TestReconcileBindingNonbindableServiceClassBindablePlan(t *testing.T) {
 		}
 		return i
 	}())
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlan())
 
 	binding := &v1alpha1.Binding{
 		ObjectMeta: metav1.ObjectMeta{Name: testBindingName, Namespace: testNamespace},
@@ -466,6 +470,7 @@ func TestReconcileBindingBindableServiceClassNonbindablePlan(t *testing.T) {
 	sharedInformers.Brokers().Informer().GetStore().Add(getTestBroker())
 	sharedInformers.ServiceClasses().Informer().GetStore().Add(getTestServiceClass())
 	sharedInformers.Instances().Informer().GetStore().Add(getTestInstanceBindableServiceNonbindablePlan())
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlanNonbindable())
 
 	binding := &v1alpha1.Binding{
 		ObjectMeta: metav1.ObjectMeta{Name: testBindingName, Namespace: testNamespace},
@@ -560,6 +565,7 @@ func TestReconcileBindingInstanceNotReady(t *testing.T) {
 	sharedInformers.Brokers().Informer().GetStore().Add(getTestBroker())
 	sharedInformers.ServiceClasses().Informer().GetStore().Add(getTestServiceClass())
 	sharedInformers.Instances().Informer().GetStore().Add(getTestInstance())
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlan())
 
 	binding := &v1alpha1.Binding{
 		ObjectMeta: metav1.ObjectMeta{Name: testBindingName, Namespace: testNamespace},
@@ -603,6 +609,7 @@ func TestReconcileBindingNamespaceError(t *testing.T) {
 	sharedInformers.Brokers().Informer().GetStore().Add(getTestBroker())
 	sharedInformers.ServiceClasses().Informer().GetStore().Add(getTestServiceClass())
 	sharedInformers.Instances().Informer().GetStore().Add(getTestInstance())
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlan())
 
 	binding := &v1alpha1.Binding{
 		ObjectMeta: metav1.ObjectMeta{Name: testBindingName, Namespace: testNamespace},
@@ -620,6 +627,7 @@ func TestReconcileBindingNamespaceError(t *testing.T) {
 	brokerActions := fakeBrokerClient.Actions()
 	assertNumberOfBrokerActions(t, brokerActions, 0)
 
+	// TODO missing the action
 	actions := fakeCatalogClient.Actions()
 	assertNumberOfActions(t, actions, 1)
 	updatedBinding := assertUpdateStatus(t, actions[0], binding)
@@ -642,6 +650,7 @@ func TestReconcileBindingDelete(t *testing.T) {
 	sharedInformers.Brokers().Informer().GetStore().Add(getTestBroker())
 	sharedInformers.ServiceClasses().Informer().GetStore().Add(getTestServiceClass())
 	sharedInformers.Instances().Informer().GetStore().Add(getTestInstance())
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlan())
 
 	binding := &v1alpha1.Binding{
 		ObjectMeta: metav1.ObjectMeta{
@@ -737,6 +746,7 @@ func TestReconcileBindingWithPodPresetTemplate(t *testing.T) {
 	sharedInformers.Brokers().Informer().GetStore().Add(getTestBroker())
 	sharedInformers.ServiceClasses().Informer().GetStore().Add(getTestServiceClass())
 	sharedInformers.Instances().Informer().GetStore().Add(getTestInstanceWithStatus(v1alpha1.ConditionTrue))
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlan())
 
 	binding := &v1alpha1.Binding{
 		ObjectMeta: metav1.ObjectMeta{Name: testBindingName, Namespace: testNamespace},
@@ -838,6 +848,7 @@ func TestReconcileBindingWithBrokerError(t *testing.T) {
 	sharedInformers.Brokers().Informer().GetStore().Add(getTestBroker())
 	sharedInformers.ServiceClasses().Informer().GetStore().Add(getTestServiceClass())
 	sharedInformers.Instances().Informer().GetStore().Add(getTestInstanceWithStatus(v1alpha1.ConditionTrue))
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlan())
 
 	binding := &v1alpha1.Binding{
 		ObjectMeta: metav1.ObjectMeta{Name: testBindingName, Namespace: testNamespace},
@@ -879,6 +890,7 @@ func TestReconcileBindingWithBrokerHTTPError(t *testing.T) {
 	sharedInformers.Brokers().Informer().GetStore().Add(getTestBroker())
 	sharedInformers.ServiceClasses().Informer().GetStore().Add(getTestServiceClass())
 	sharedInformers.Instances().Informer().GetStore().Add(getTestInstanceWithStatus(v1alpha1.ConditionTrue))
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlan())
 
 	binding := &v1alpha1.Binding{
 		ObjectMeta: metav1.ObjectMeta{Name: testBindingName, Namespace: testNamespace},
@@ -1045,6 +1057,7 @@ func TestReconcileUnbindingWithBrokerError(t *testing.T) {
 	sharedInformers.Brokers().Informer().GetStore().Add(getTestBroker())
 	sharedInformers.ServiceClasses().Informer().GetStore().Add(getTestServiceClass())
 	sharedInformers.Instances().Informer().GetStore().Add(getTestInstanceWithStatus(v1alpha1.ConditionTrue))
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlan())
 
 	t1 := metav1.NewTime(time.Now())
 	binding := &v1alpha1.Binding{
@@ -1089,6 +1102,7 @@ func TestReconcileUnbindingWithBrokerHTTPError(t *testing.T) {
 	sharedInformers.Brokers().Informer().GetStore().Add(getTestBroker())
 	sharedInformers.ServiceClasses().Informer().GetStore().Add(getTestServiceClass())
 	sharedInformers.Instances().Informer().GetStore().Add(getTestInstanceWithStatus(v1alpha1.ConditionTrue))
+	sharedInformers.ServicePlans().Informer().GetStore().Add(getTestServicePlan())
 
 	t1 := metav1.NewTime(time.Now())
 	binding := &v1alpha1.Binding{
