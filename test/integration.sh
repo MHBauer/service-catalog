@@ -25,7 +25,8 @@ source "${KUBE_ROOT}/hack/lib/init.sh"
 runTests() {
   kube::etcd::start
 
-  go test -race -v github.com/kubernetes-incubator/service-catalog/test/integration/... --args -v 10 -logtostderr
+  go test -race -v -c -i github.com/kubernetes-incubator/service-catalog/test/integration/...
+  ./integration.test -v 10 -logtostderr -test.run TestBasicFlowsSync
 }
 
 # Run cleanup to stop etcd on interrupt or other kill signal.

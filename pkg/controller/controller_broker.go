@@ -221,42 +221,44 @@ func (c *controller) reconcileBroker(broker *v1alpha1.Broker) error {
 		}
 		glog.V(5).Infof("Successfully fetched %v catalog entries for Broker %v", len(brokerCatalog.Services), broker.Name)
 
-		glog.V(4).Infof("Converting catalog response for Broker %v into service-catalog API", broker.Name)
-		catalog, err := convertCatalog(brokerCatalog)
-		if err != nil {
-			s := fmt.Sprintf("Error converting catalog payload for broker %q to service-catalog API: %s", broker.Name, err)
-			glog.Warning(s)
-			c.recorder.Eventf(broker, api.EventTypeWarning, errorSyncingCatalogReason, s)
-			c.updateBrokerCondition(broker, v1alpha1.BrokerConditionReady, v1alpha1.ConditionFalse, errorSyncingCatalogReason, errorSyncingCatalogMessage+s)
-			return err
-		}
-		glog.V(5).Infof("Successfully converted catalog payload from Broker %v to service-catalog API", broker.Name)
-
-		if len(catalog) == 0 {
-			s := fmt.Sprintf("Error getting catalog payload for broker %q; received zero services; at least one service is required", broker.Name)
-			glog.Warning(s)
-			c.recorder.Eventf(broker, api.EventTypeWarning, errorSyncingCatalogReason, s)
-			c.updateBrokerCondition(broker, v1alpha1.BrokerConditionReady, v1alpha1.ConditionFalse, errorSyncingCatalogReason, errorSyncingCatalogMessage+s)
-			return stderrors.New(s)
-		}
-
-		for _, serviceClass := range catalog {
-			glog.V(4).Infof("Reconciling serviceClass %v (broker %v)", serviceClass.Name, broker.Name)
-			if err := c.reconcileServiceClassFromBrokerCatalog(broker, serviceClass); err != nil {
-				s := fmt.Sprintf(
-					"Error reconciling serviceClass %q (broker %q): %s",
-					serviceClass.Name,
-					broker.Name,
-					err,
-				)
+		{
+			glog.V(4).Infof("Converting catalog response for Broker %v into service-catalog API", broker.Name)
+			catalog, err := convertCatalog(brokerCatalog)
+			if err != nil {
+				s := fmt.Sprintf("Error converting catalog payload for broker %q to service-catalog API: %s", broker.Name, err)
 				glog.Warning(s)
 				c.recorder.Eventf(broker, api.EventTypeWarning, errorSyncingCatalogReason, s)
-				c.updateBrokerCondition(broker, v1alpha1.BrokerConditionReady, v1alpha1.ConditionFalse, errorSyncingCatalogReason,
-					errorSyncingCatalogMessage+s)
+				c.updateBrokerCondition(broker, v1alpha1.BrokerConditionReady, v1alpha1.ConditionFalse, errorSyncingCatalogReason, errorSyncingCatalogMessage+s)
 				return err
 			}
+			glog.V(5).Infof("Successfully converted catalog payload from Broker %v to service-catalog API", broker.Name)
 
-			glog.V(5).Infof("Reconciled serviceClass %v (broker %v)", serviceClass.Name, broker.Name)
+			if len(catalog) == 0 {
+				s := fmt.Sprintf("Error getting catalog payload for broker %q; received zero services; at least one service is required", broker.Name)
+				glog.Warning(s)
+				c.recorder.Eventf(broker, api.EventTypeWarning, errorSyncingCatalogReason, s)
+				c.updateBrokerCondition(broker, v1alpha1.BrokerConditionReady, v1alpha1.ConditionFalse, errorSyncingCatalogReason, errorSyncingCatalogMessage+s)
+				return stderrors.New(s)
+			}
+
+			for _, serviceClass := range catalog {
+				glog.V(4).Infof("Reconciling serviceClass %v (broker %v)", serviceClass.Name, broker.Name)
+				if err := c.reconcileServiceClassFromBrokerCatalog(broker, serviceClass); err != nil {
+					s := fmt.Sprintf(
+						"Error reconciling serviceClass %q (broker %q): %s",
+						serviceClass.Name,
+						broker.Name,
+						err,
+					)
+					glog.Warning(s)
+					c.recorder.Eventf(broker, api.EventTypeWarning, errorSyncingCatalogReason, s)
+					c.updateBrokerCondition(broker, v1alpha1.BrokerConditionReady, v1alpha1.ConditionFalse, errorSyncingCatalogReason,
+						errorSyncingCatalogMessage+s)
+					return err
+				}
+
+				glog.V(5).Infof("Reconciled serviceClass %v (broker %v)", serviceClass.Name, broker.Name)
+			}
 		}
 
 		c.updateBrokerCondition(broker, v1alpha1.BrokerConditionReady, v1alpha1.ConditionTrue, successFetchedCatalogReason, successFetchedCatalogMessage)

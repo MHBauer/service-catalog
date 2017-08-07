@@ -98,7 +98,7 @@ func ValidateServiceClass(serviceclass *sc.ServiceClass) field.ErrorList {
 	return allErrs
 }
 
-// validateServicePlan validates the fields of a single ServicePlan and
+// validatePlan validates the fields of a single Plan and
 // returns a list of errors.
 func validatePlan(plan sc.Plan, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}

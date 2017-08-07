@@ -618,6 +618,7 @@ func newTestController(t *testing.T, config fakeosb.FakeClientConfiguration) (
 		catalogClient.ServicecatalogV1alpha1(),
 		serviceCatalogSharedInformers.Brokers(),
 		serviceCatalogSharedInformers.ServiceClasses(),
+		serviceCatalogSharedInformers.ServicePlans(),
 		serviceCatalogSharedInformers.Instances(),
 		serviceCatalogSharedInformers.Bindings(),
 		brokerClFunc,

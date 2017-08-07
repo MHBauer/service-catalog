@@ -189,10 +189,6 @@ type ServiceClass struct {
 	// Bindable which overrides the value of this field.
 	Bindable bool
 
-	// Plans is the list of ServicePlans for this ServiceClass.  All
-	// ServiceClasses have at least one ServicePlan.
-	Plans []Plan
-
 	// PlanUpdatable indicates whether instances provisioned from this
 	// ServiceClass may change ServicePlans after being provisioned.
 	PlanUpdatable bool
@@ -224,45 +220,29 @@ type ServiceClass struct {
 	// Foundry.  These 'permissions' have no meaning within Kubernetes and an
 	// Instance provisioned from this ServiceClass will not work correctly.
 	AlphaRequires []string
+
+	//v1.LocalObjectReference
 }
 
-type Plan struct {
-	// PlanRef is a reference to the full plan details.
-	PlanRef v1.LocalObjectReference `json:"planRef"`
-
-	// Name is the CLI-friendly name of this ServicePlan.
-	Name string
-
-	// ExternalID is the identity of this object for use with the OSB API.
-	//
-	// Immutable.
-	ExternalID string
-
-	// Description is a short description of this ServicePlan.
-	Description string
-
-	// Free indicates whether this ServicePlan is available at no cost.
-	Free bool
-}
-
-// ServicePlanList is a list of ServicePlans.
-type ServicePlanList struct {
+// PlanList is a list of ServicePlans.
+type PlanList struct {
 	metav1.TypeMeta
 	metav1.ListMeta
 
-	Items []ServicePlan
+	Items []Plan
 }
 
 // +genclient=true
 // +nonNamespaced=true
 
-// ServicePlan represents a tier of a ServiceClass.
-type ServicePlan struct {
+// Plan represents a tier of a ServiceClass.
+type Plan struct {
 	metav1.TypeMeta
 	metav1.ObjectMeta
 
-	// Name is the CLI-friendly name of this ServicePlan.
-	Name string
+	// PlanName is the CLI-friendly name of this ServicePlan. Does
+	// this still need to exist as a separate field?
+	PlanName string
 
 	// ExternalID is the identity of this object for use with the OSB API.
 	//
@@ -309,7 +289,7 @@ type ServicePlan struct {
 
 	// ServiceClassRef is a reference to the service class that
 	// owns this plan.
-	ServiceClassRef v1.LocalObjectReference `json:"serviceClassRef"`
+	// ServiceClassRef v1.LocalObjectReference
 }
 
 // InstanceList is a list of instances.

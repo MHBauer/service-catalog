@@ -357,7 +357,6 @@ func getTestServicePlan() *v1alpha1.ServicePlan {
 			AlphaInstanceCreateParameterSchema: nil,
 			AlphaInstanceUpdateParameterSchema: nil,
 			AlphaBindingCreateParameterSchema:  nil,
-			ServiceClassRef:                    v1.LocalObjectReference{Name: testServiceClassName},
 		},
 	}
 }
@@ -373,7 +372,6 @@ func getTestServicePlanNonbindable() *v1alpha1.ServicePlan {
 			Description:     "a test plan",
 			Bindable:        falsePtr(),
 			Free:            true,
-			ServiceClassRef: v1.LocalObjectReference{Name: testServiceClassName},
 		},
 	}
 }

@@ -30,10 +30,10 @@ type Interface interface {
 	Brokers() BrokerInformer
 	// Instances returns a InstanceInformer.
 	Instances() InstanceInformer
+	// Plans returns a PlanInformer.
+	Plans() PlanInformer
 	// ServiceClasses returns a ServiceClassInformer.
 	ServiceClasses() ServiceClassInformer
-	// ServicePlans returns a ServicePlanInformer.
-	ServicePlans() ServicePlanInformer
 }
 
 type version struct {
@@ -60,12 +60,12 @@ func (v *version) Instances() InstanceInformer {
 	return &instanceInformer{factory: v.SharedInformerFactory}
 }
 
+// Plans returns a PlanInformer.
+func (v *version) Plans() PlanInformer {
+	return &planInformer{factory: v.SharedInformerFactory}
+}
+
 // ServiceClasses returns a ServiceClassInformer.
 func (v *version) ServiceClasses() ServiceClassInformer {
 	return &serviceClassInformer{factory: v.SharedInformerFactory}
-}
-
-// ServicePlans returns a ServicePlanInformer.
-func (v *version) ServicePlans() ServicePlanInformer {
-	return &servicePlanInformer{factory: v.SharedInformerFactory}
 }

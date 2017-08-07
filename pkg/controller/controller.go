@@ -458,7 +458,7 @@ func getBearerConfig(secret *apiv1.Secret) (*osb.BearerConfig, error) {
 	}, nil
 }
 
-// convertCatalog converts a service broker catalog into an array of ServiceClasses
+// convertCatalog converts a service broker catalog into an array of ServiceClasses (and a map of serviceclass name to serviceplans)?
 func convertCatalog(in *osb.CatalogResponse) ([]*v1alpha1.ServiceClass, error) {
 	ret := make([]*v1alpha1.ServiceClass, len(in.Services))
 	for i, svc := range in.Services {
@@ -491,6 +491,7 @@ func convertCatalog(in *osb.CatalogResponse) ([]*v1alpha1.ServiceClass, error) {
 	return ret, nil
 }
 
+// convertServicePlans transforms the incoming OSBAPI plans into Kubernetes Objects
 func convertServicePlans(plans []osb.Plan) ([]v1alpha1.Plan, error) {
 	ret := make([]v1alpha1.Plan, len(plans))
 	for i := range plans {
@@ -506,49 +507,49 @@ func convertServicePlans(plans []osb.Plan) ([]v1alpha1.Plan, error) {
 				ret[i].Bindable = &b
 			}
 
-			if plans[i].Metadata != nil {
-				metadata, err := json.Marshal(plans[i].Metadata)
-				if err != nil {
-					err = fmt.Errorf("Failed to marshal metadata\n%+v\n %v", plans[i].Metadata, err)
-					glog.Error(err)
-					return nil, err
+				if plans[i].Metadata != nil {
+					metadata, err := json.Marshal(plans[i].Metadata)
+					if err != nil {
+						err = fmt.Errorf("Failed to marshal metadata\n%+v\n %v", plans[i].Metadata, err)
+						glog.Error(err)
+						return nil, err
+					}
+					ret[i].ExternalMetadata = &runtime.RawExtension{Raw: metadata}
 				}
-				ret[i].ExternalMetadata = &runtime.RawExtension{Raw: metadata}
-			}
 
-			if schemas := plans[i].AlphaParameterSchemas; schemas != nil {
-				if instanceSchemas := schemas.ServiceInstances; instanceSchemas != nil {
-					if instanceCreateSchema := instanceSchemas.Create; instanceCreateSchema != nil && instanceCreateSchema.Parameters != nil {
-						schema, err := json.Marshal(instanceCreateSchema.Parameters)
-						if err != nil {
-							err = fmt.Errorf("Failed to marshal instance create schema \n%+v\n %v", instanceCreateSchema.Parameters, err)
-							glog.Error(err)
-							return nil, err
+				if schemas := plans[i].AlphaParameterSchemas; schemas != nil {
+					if instanceSchemas := schemas.ServiceInstances; instanceSchemas != nil {
+						if instanceCreateSchema := instanceSchemas.Create; instanceCreateSchema != nil && instanceCreateSchema.Parameters != nil {
+							schema, err := json.Marshal(instanceCreateSchema.Parameters)
+							if err != nil {
+								err = fmt.Errorf("Failed to marshal instance create schema \n%+v\n %v", instanceCreateSchema.Parameters, err)
+								glog.Error(err)
+								return nil, err
+							}
+							ret[i].AlphaInstanceCreateParameterSchema = &runtime.RawExtension{Raw: schema}
 						}
-						ret[i].AlphaInstanceCreateParameterSchema = &runtime.RawExtension{Raw: schema}
+						if instanceUpdateSchema := instanceSchemas.Update; instanceUpdateSchema != nil && instanceUpdateSchema.Parameters != nil {
+							schema, err := json.Marshal(instanceUpdateSchema.Parameters)
+							if err != nil {
+								err = fmt.Errorf("Failed to marshal instance update schema \n%+v\n %v", instanceUpdateSchema.Parameters, err)
+								glog.Error(err)
+								return nil, err
+							}
+							ret[i].AlphaInstanceUpdateParameterSchema = &runtime.RawExtension{Raw: schema}
+						}
 					}
-					if instanceUpdateSchema := instanceSchemas.Update; instanceUpdateSchema != nil && instanceUpdateSchema.Parameters != nil {
-						schema, err := json.Marshal(instanceUpdateSchema.Parameters)
-						if err != nil {
-							err = fmt.Errorf("Failed to marshal instance update schema \n%+v\n %v", instanceUpdateSchema.Parameters, err)
-							glog.Error(err)
-							return nil, err
+					if bindingSchemas := schemas.ServiceBindings; bindingSchemas != nil {
+						if bindingCreateSchema := bindingSchemas.Create; bindingCreateSchema != nil && bindingCreateSchema.Parameters != nil {
+							schema, err := json.Marshal(bindingCreateSchema.Parameters)
+							if err != nil {
+								err = fmt.Errorf("Failed to marshal binding create schema \n%+v\n %v", bindingCreateSchema.Parameters, err)
+								glog.Error(err)
+								return nil, err
+							}
+							ret[i].AlphaBindingCreateParameterSchema = &runtime.RawExtension{Raw: schema}
 						}
-						ret[i].AlphaInstanceUpdateParameterSchema = &runtime.RawExtension{Raw: schema}
 					}
 				}
-				if bindingSchemas := schemas.ServiceBindings; bindingSchemas != nil {
-					if bindingCreateSchema := bindingSchemas.Create; bindingCreateSchema != nil && bindingCreateSchema.Parameters != nil {
-						schema, err := json.Marshal(bindingCreateSchema.Parameters)
-						if err != nil {
-							err = fmt.Errorf("Failed to marshal binding create schema \n%+v\n %v", bindingCreateSchema.Parameters, err)
-							glog.Error(err)
-							return nil, err
-						}
-						ret[i].AlphaBindingCreateParameterSchema = &runtime.RawExtension{Raw: schema}
-					}
-				}
-			}
 		*/
 	}
 	return ret, nil

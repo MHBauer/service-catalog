@@ -38,12 +38,12 @@ func (c *FakeServicecatalogV1alpha1) Instances(namespace string) v1alpha1.Instan
 	return &FakeInstances{c, namespace}
 }
 
-func (c *FakeServicecatalogV1alpha1) ServiceClasses() v1alpha1.ServiceClassInterface {
-	return &FakeServiceClasses{c}
+func (c *FakeServicecatalogV1alpha1) Plans() v1alpha1.PlanInterface {
+	return &FakePlans{c}
 }
 
-func (c *FakeServicecatalogV1alpha1) ServicePlans() v1alpha1.ServicePlanInterface {
-	return &FakeServicePlans{c}
+func (c *FakeServicecatalogV1alpha1) ServiceClasses() v1alpha1.ServiceClassInterface {
+	return &FakeServiceClasses{c}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
