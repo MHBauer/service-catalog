@@ -41,3 +41,7 @@ type InstanceNamespaceListerExpansion interface{}
 // ServiceClassListerExpansion allows custom methods to be added to
 // ServiceClassLister.
 type ServiceClassListerExpansion interface{}
+
+// ServicePlanListerExpansion allows custom methods to be added to
+// ServicePlanLister.
+type ServicePlanListerExpansion interface{}

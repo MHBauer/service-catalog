@@ -23,3 +23,5 @@ type BrokerExpansion interface{}
 type InstanceExpansion interface{}
 
 type ServiceClassExpansion interface{}
+
+type ServicePlanExpansion interface{}

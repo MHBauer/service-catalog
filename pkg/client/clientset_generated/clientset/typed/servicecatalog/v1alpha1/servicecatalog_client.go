@@ -29,6 +29,7 @@ type ServicecatalogV1alpha1Interface interface {
 	BrokersGetter
 	InstancesGetter
 	ServiceClassesGetter
+	ServicePlansGetter
 }
 
 // ServicecatalogV1alpha1Client is used to interact with features provided by the servicecatalog.k8s.io group.
@@ -50,6 +51,10 @@ func (c *ServicecatalogV1alpha1Client) Instances(namespace string) InstanceInter
 
 func (c *ServicecatalogV1alpha1Client) ServiceClasses() ServiceClassInterface {
 	return newServiceClasses(c)
+}
+
+func (c *ServicecatalogV1alpha1Client) ServicePlans() ServicePlanInterface {
+	return newServicePlans(c)
 }
 
 // NewForConfig creates a new ServicecatalogV1alpha1Client for the given config.
