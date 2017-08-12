@@ -46,6 +46,12 @@ spec:
         {{- if eq .Values.apiserver.storage.type "etcd" }}
         - --etcd-servers
         - {{ .Values.apiserver.storage.etcd.servers }}
+        - --etcd-cafile
+        - /bx/ca.pem
+        - --etcd-keyfile
+        - /bx/etcd-key.pem 
+        - --etcd-certfile
+        - /bx/etcd.pem 
         {{- else if eq .Values.apiserver.storage.type "tpr" }}
         - --global-namespace
         - {{ .Values.apiserver.storage.tpr.globalNamespace }}
@@ -64,6 +70,8 @@ spec:
         - name: apiserver-cert
           mountPath: /var/run/kubernetes-service-catalog
           readOnly: true
+        - name: bluemix-host
+          mountPath: /bx
         readinessProbe:
           httpGet:
             port: 8443
@@ -145,3 +153,6 @@ spec:
       - name: etcd-data-dir
         emptyDir: {}
       {{- end }}
+      - name: bluemix-host
+        hostPath:
+          path: /etc/kubernetes/cert/
