@@ -45,7 +45,7 @@ spec:
         - {{ .Values.apiserver.storage.type }}
         {{- if eq .Values.apiserver.storage.type "etcd" }}
         - --etcd-servers
-        - {{ .Values.apiserver.storage.etcd.servers }}
+        - $(ETCD_URL)
         - --etcd-cafile
         - /bx/ca.pem
         - --etcd-keyfile
@@ -92,6 +92,19 @@ spec:
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 2
+        env:
+        - name: ETCD_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: etcd-config
+              key: etcdhost
+        - name: ETCD_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: etcd-config
+              key: etcdport
+        - name: ETCD_URL
+          value: https://$(ETCD_HOST):$(ETCD_PORT)
       {{- if and (eq .Values.apiserver.storage.type "etcd") .Values.apiserver.storage.etcd.useEmbedded }}
       - name: etcd
         image: quay.io/coreos/etcd:latest
