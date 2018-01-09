@@ -19,7 +19,9 @@ package integration
 import (
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -34,20 +36,25 @@ type EtcdContext struct {
 	Endpoint string
 }
 
-var etcdContext = EtcdContext{}
-
-func startEtcd() error {
+func startEtcd(port int) (EtcdContext, error) {
+	var etcdContext = EtcdContext{}
 	var err error
 	if etcdContext.dir, err = ioutil.TempDir(os.TempDir(), "service_catalog_integration_test"); err != nil {
-		return fmt.Errorf("could not create TempDir: %v", err)
+		return etcdContext, fmt.Errorf("could not create TempDir: %v", err)
 	}
 	cfg := embed.NewConfig()
+
+	lcurl, _ := url.Parse("http://localhost:" + strconv.Itoa(port))
+	cfg.LCUrls = []url.URL{*lcurl}
+	// no peers in the test, so let's save a listener
+	cfg.LPUrls = []url.URL{}
+
 	// default of INFO prints useless information
 	capnslog.SetGlobalLogLevel(capnslog.WARNING)
 	cfg.Dir = etcdContext.dir
 
 	if etcdContext.etcd, err = embed.StartEtcd(cfg); err != nil {
-		return fmt.Errorf("Failed starting etcd: %+v", err)
+		return etcdContext, fmt.Errorf("Failed starting etcd: %+v", err)
 	}
 
 	select {
@@ -57,10 +64,11 @@ func startEtcd() error {
 		etcdContext.etcd.Server.Stop() // trigger a shutdown
 		glog.Error("server took too long to start!")
 	}
-	return nil
+
+	return etcdContext, nil
 }
 
-func stopEtcd() {
+func stopEtcd(etcdContext EtcdContext) {
 	if etcdContext.etcd == nil {
 		return
 	}
@@ -76,15 +84,8 @@ func stopEtcd() {
 }
 
 func TestMain(m *testing.M) {
-	// Setup
-	if err := startEtcd(); err != nil {
-		panic(fmt.Sprintf("Failed to start etcd, %v", err))
-	}
-
 	// Tests
 	result := m.Run()
 
-	// Teardown
-	stopEtcd()
 	os.Exit(result)
 }
