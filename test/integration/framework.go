@@ -69,12 +69,26 @@ func withConfigGetFreshApiserverAndClient(
 	func(),
 ) {
 	securePort := rand.Intn(31743) + 1024
+	etcdPort := 0
+	ec, err := startEtcd(etcdPort)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to start etcd, %v", err))
+	}
+	etcdAddrs := []string{}
+	for _, client := range ec.etcd.Clients {
+		etcdAddrs = append(etcdAddrs, client.Addr().String())
+	}
+	// only ever the one client listener
+	t.Logf("etcd started listening @ %v", etcdAddrs)
+	serverConfig.etcdServerList = etcdAddrs
+
 	secureAddr := fmt.Sprintf("https://localhost:%d", securePort)
 	stopCh := make(chan struct{})
 	serverFailed := make(chan struct{})
 	shutdownServer := func() {
 		t.Logf("Shutting down server on port: %d", securePort)
 		close(stopCh)
+		stopEtcd(ec)
 	}
 
 	t.Logf("Starting server on port: %d", securePort)
@@ -141,9 +155,8 @@ func getFreshApiserverAndClient(
 	}
 
 	serverConfig := &TestServerConfig{
-		etcdServerList: []string{"http://localhost:2379"},
-		storageType:    serverStorageType,
-		emptyObjFunc:   newEmptyObj,
+		storageType:  serverStorageType,
+		emptyObjFunc: newEmptyObj,
 	}
 	client, clientConfig, shutdownFunc := withConfigGetFreshApiserverAndClient(t, serverConfig)
 	return client, clientConfig, shutdownFunc
