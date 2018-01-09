@@ -78,7 +78,6 @@ func withConfigGetFreshApiserverAndClient(
 	for _, client := range ec.etcd.Clients {
 		etcdAddrs = append(etcdAddrs, client.Addr().String())
 	}
-	// only ever the one client listener
 	t.Logf("etcd started listening @ %v", etcdAddrs)
 	serverConfig.etcdServerList = etcdAddrs
 
