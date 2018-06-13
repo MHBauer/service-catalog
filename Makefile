@@ -176,7 +176,7 @@ $(BINDIR)/openapi-gen: vendor/k8s.io/code-generator/cmd/openapi-gen
 
 .PHONY: $(BINDIR)/e2e.test
 $(BINDIR)/e2e.test: .init
-	$(DOCKER_CMD) go test -c -o $@ $(SC_PKG)/test/e2e
+	$(DOCKER_CMD) go test $(GOFLAGS) -c -o $@ $(SC_PKG)/test/e2e
 
 # Regenerate all files if the gen exes changed or any "types.go" files changed
 .generate_files: .init .generate_exes $(TYPES_FILES)
@@ -266,11 +266,11 @@ check-go:
 # this target uses the host-local go installation to test
 .PHONY: test-unit-native
 test-unit-native: check-go
-	go test $(addprefix ${SC_PKG}/,${TEST_DIRS})
+	go test $(GOFLAGS) -race $(addprefix ${SC_PKG}/,${TEST_DIRS})
 
 test-unit: .init build
 	@echo Running tests:
-	$(DOCKER_CMD) go test -race $(UNIT_TEST_FLAGS) \
+	$(DOCKER_CMD) go test $(GOFLAGS) -race $(UNIT_TEST_FLAGS) \
 	  $(addprefix $(SC_PKG)/,$(TEST_DIRS)) $(UNIT_TEST_LOG_FLAGS)
 
 test-update-goldenfiles: .init

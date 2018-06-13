@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/registry/generic"
+	"k8s.io/apiserver/pkg/registry/rest"
 	serverstorage "k8s.io/apiserver/pkg/server/storage"
 	"k8s.io/apiserver/pkg/storage"
 	"k8s.io/apiserver/pkg/storage/storagebackend"
@@ -58,7 +59,7 @@ func testRESTOptionsGetter(
 	return GetRESTOptionsHelper{retStorageInterface, retDestroyFunc}
 }
 
-func TestV1Alpha1Storage(t *testing.T) {
+func TestV1Beta1Storage(t *testing.T) {
 	provider := StorageProvider{
 		DefaultNamespace: "test-default",
 		StorageType:      server.StorageTypeEtcd,
@@ -67,13 +68,19 @@ func TestV1Alpha1Storage(t *testing.T) {
 	configSource := serverstorage.NewResourceConfig()
 	roGetter := testRESTOptionsGetter(nil, func() {})
 	storageMap, err := provider.v1beta1Storage(configSource, roGetter)
+
 	if err != nil {
 		t.Fatalf("error getting v1beta1 storage (%s)", err)
 	}
-	_, brokerStorageExists := storageMap["clusterservicebrokers"]
+	csbs, brokerStorageExists := storageMap["clusterservicebrokers"]
 	if !brokerStorageExists {
 		t.Fatalf("no broker storage found")
 	}
+
+	if _, isGetter := csbs.(rest.Getter); !isGetter {
+		t.Fatalf("broker storage isn't a getter")
+	}
+
 	// TODO: do stuff with broker storage
 	_, brokerStatusStorageExists := storageMap["clusterservicebrokers/status"]
 	if !brokerStatusStorageExists {
@@ -93,10 +100,16 @@ func TestV1Alpha1Storage(t *testing.T) {
 	}
 	// TODO: do stuff with instance storage
 
-	_, bindingStorageExists := storageMap["servicebindings"]
+	bs, bindingStorageExists := storageMap["servicebindings"]
 	if !bindingStorageExists {
 		t.Fatalf("no service instance credential storage found")
 	}
-	// TODO: do stuff with binding storage
+
+	if _, isGetter := bs.(rest.GracefulDeleter); !isGetter {
+		t.Fatalf("broker storage isn't a deleter")
+	}
+	if _, isGetter := bs.(rest.Getter); !isGetter {
+		t.Fatalf("broker storage isn't a getter")
+	}
 
 }

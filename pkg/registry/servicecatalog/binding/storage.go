@@ -101,6 +101,15 @@ func GetAttrs(obj runtime.Object) (labels.Set, fields.Set, bool, error) {
 	return labels.Set(binding.ObjectMeta.Labels), toSelectableFields(binding), binding.Initializers != nil, nil
 }
 
+type bindingStorage struct {
+	rest.Storage
+}
+
+func (bs *bindingStorage) Delete(ctx genericapirequest.Context, name string, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
+	fmt.Println("yolo all the time deleting things")
+	return nil, false, nil
+}
+
 // NewStorage creates a new rest.Storage responsible for accessing ServiceBinding
 // resources
 func NewStorage(opts server.Options) (rest.Storage, rest.Storage, error) {
@@ -138,6 +147,9 @@ func NewStorage(opts server.Options) (rest.Storage, rest.Storage, error) {
 		Storage:     storageInterface,
 		DestroyFunc: dFunc,
 	}
+	bs := bindingStorage{
+		&store,
+	}
 
 	options := &generic.StoreOptions{RESTOptions: opts.EtcdOptions.RESTOptions, AttrFunc: GetAttrs}
 	if err := store.CompleteWithOptions(options); err != nil {
@@ -147,7 +159,7 @@ func NewStorage(opts server.Options) (rest.Storage, rest.Storage, error) {
 	statusStore := store
 	statusStore.UpdateStrategy = bindingStatusUpdateStrategy
 
-	return &store, &StatusREST{&statusStore}, nil
+	return &bs, &StatusREST{&statusStore}, nil
 }
 
 // StatusREST defines the REST operations for the status subresource via
