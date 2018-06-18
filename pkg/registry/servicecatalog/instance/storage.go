@@ -169,7 +169,7 @@ func NewStorage(opts server.Options) (rest.Storage, rest.Storage, rest.Storage) 
 // implementation of various rest interfaces.  It supports the http verbs GET,
 // PATCH, and PUT.
 type StatusREST struct {
-	store *registry.Store
+	*registry.Store
 }
 
 // New returns a new ServiceInstance
@@ -180,18 +180,18 @@ func (r *StatusREST) New() runtime.Object {
 // Get retrieves the object from the storage. It is required to support Patch
 // and to implement the rest.Getter interface.
 func (r *StatusREST) Get(ctx genericapirequest.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	return r.store.Get(ctx, name, options)
+	return r.Store.Get(ctx, name, options)
 }
 
 // Update alters the status subset of an object and it
 // implements rest.Updater interface
 func (r *StatusREST) Update(ctx genericapirequest.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc) (runtime.Object, bool, error) {
-	return r.store.Update(ctx, name, objInfo, createValidation, updateValidation)
+	return r.Store.Update(ctx, name, objInfo, createValidation, updateValidation)
 }
 
 // ReferenceREST defines the REST operations for the reference subresource.
 type ReferenceREST struct {
-	store *registry.Store
+	*registry.Store
 }
 
 // New returns a new ServiceInstance
@@ -202,11 +202,11 @@ func (r *ReferenceREST) New() runtime.Object {
 // Get retrieves the object from the storage. It is required to support Patch
 // and to implement the rest.Getter interface.
 func (r *ReferenceREST) Get(ctx genericapirequest.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	return r.store.Get(ctx, name, options)
+	return r.Store.Get(ctx, name, options)
 }
 
 // Update alters the reference subset of an object and it
 // implements rest.Updater interface
 func (r *ReferenceREST) Update(ctx genericapirequest.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc) (runtime.Object, bool, error) {
-	return r.store.Update(ctx, name, objInfo, createValidation, updateValidation)
+	return r.Store.Update(ctx, name, objInfo, createValidation, updateValidation)
 }

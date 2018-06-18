@@ -68,48 +68,47 @@ func TestV1Beta1Storage(t *testing.T) {
 	configSource := serverstorage.NewResourceConfig()
 	roGetter := testRESTOptionsGetter(nil, func() {})
 	storageMap, err := provider.v1beta1Storage(configSource, roGetter)
-
 	if err != nil {
 		t.Fatalf("error getting v1beta1 storage (%s)", err)
 	}
-	csbs, brokerStorageExists := storageMap["clusterservicebrokers"]
-	if !brokerStorageExists {
-		t.Fatalf("no broker storage found")
+
+	storages := [...]string{
+		"clusterservicebrokers",
+		"clusterservicebrokers/status",
+		"clusterserviceclasses",
+		"clusterserviceclasses/status",
+		"clusterserviceplans",
+		"clusterserviceplans/status",
+		"serviceinstances",
+		"serviceinstances/status",
+		"serviceinstances/reference",
+		"servicebindings",
+		"servicebindings/status",
 	}
 
-	if _, isGetter := csbs.(rest.Getter); !isGetter {
-		t.Fatalf("broker storage isn't a getter")
+	for _, s := range storages {
+		storage, storageExists := storageMap[s]
+		if !storageExists {
+			t.Fatalf("no storage found for %q", s)
+		}
+		t.Logf("%+v", storage)
+		if _, isStandardStorage := storage.(rest.Creater); !isStandardStorage {
+			t.Fatalf("not compliant to ocreater interface for %q", s)
+		}
+		if _, isStandardStorage := storage.(rest.Lister); !isStandardStorage {
+			t.Fatalf("not compliant to standardStorage interface for %q", s)
+		}
+		if _, isStandardStorage := storage.(rest.GracefulDeleter); !isStandardStorage {
+			t.Fatalf("not compliant to standardStorage interface for %q", s)
+		}
+		if _, isStandardStorage := storage.(rest.CollectionDeleter); !isStandardStorage {
+			t.Fatalf("not compliant to standardStorage interface for %q", s)
+		}
+		if _, isStandardStorage := storage.(rest.Watcher); !isStandardStorage {
+			t.Fatalf("not compliant to standardStorage interface for %q", s)
+		}
+		if _, isStandardStorage := storage.(rest.StandardStorage); !isStandardStorage {
+			t.Fatalf("not compliant to standardStorage interface for %q", s)
+		}
 	}
-
-	// TODO: do stuff with broker storage
-	_, brokerStatusStorageExists := storageMap["clusterservicebrokers/status"]
-	if !brokerStatusStorageExists {
-		t.Fatalf("no service broker status storage found")
-	}
-	// TODO: do stuff with broker status storage
-
-	_, serviceClassStorageExists := storageMap["clusterserviceclasses"]
-	if !serviceClassStorageExists {
-		t.Fatalf("no service class storage found")
-	}
-	// TODO: do stuff with service class storage
-
-	_, instanceStorageExists := storageMap["serviceinstances"]
-	if !instanceStorageExists {
-		t.Fatalf("no service instance storage found")
-	}
-	// TODO: do stuff with instance storage
-
-	bs, bindingStorageExists := storageMap["servicebindings"]
-	if !bindingStorageExists {
-		t.Fatalf("no service instance credential storage found")
-	}
-
-	if _, isGetter := bs.(rest.GracefulDeleter); !isGetter {
-		t.Fatalf("broker storage isn't a deleter")
-	}
-	if _, isGetter := bs.(rest.Getter); !isGetter {
-		t.Fatalf("broker storage isn't a getter")
-	}
-
 }
