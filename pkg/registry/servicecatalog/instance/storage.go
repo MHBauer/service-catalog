@@ -161,8 +161,7 @@ func NewStorage(opts server.Options) (rest.Storage, rest.Storage, rest.Storage) 
 	referenceStore := store
 	referenceStore.UpdateStrategy = instanceReferenceUpdateStrategy
 
-	return &store, &StatusREST{&statusStore}, &ReferenceREST{&referenceStore}
-
+	return &store, &StatusREST{&statusStore}, &ReferenceREST{&referenceStore} // , &RealDeleterREST
 }
 
 // StatusREST defines the REST operations for the status subresource via

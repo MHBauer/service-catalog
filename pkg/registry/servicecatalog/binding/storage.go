@@ -101,22 +101,6 @@ func GetAttrs(obj runtime.Object) (labels.Set, fields.Set, bool, error) {
 	return labels.Set(binding.ObjectMeta.Labels), toSelectableFields(binding), binding.Initializers != nil, nil
 }
 
-type bindingStorage struct {
-	rest.StandardStorage
-}
-
-func (bs *bindingStorage) Delete(ctx genericapirequest.Context, name string, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
-	fmt.Println("yolo all the time deleting things")
-	return nil, false, nil
-}
-
-func checkStorage(store registry.Store) bool {
-	var _ rest.StandardStorage = &store
-	//	_, compliesWithStandardStorageInterface := (&store).(rest.StandardStorage)
-	//	return compliesWithStandardStorageInterface
-	return true
-}
-
 // NewStorage creates a new rest.Storage responsible for accessing ServiceBinding
 // resources
 func NewStorage(opts server.Options) (rest.Storage, rest.Storage, error) {
@@ -157,9 +141,7 @@ func NewStorage(opts server.Options) (rest.Storage, rest.Storage, error) {
 
 	checkStorage(store)
 
-	bs := bindingStorage{
-		&store,
-	}
+	bs := bindingStorage{&store}
 
 	//	checkStorage(bs)
 
@@ -174,26 +156,42 @@ func NewStorage(opts server.Options) (rest.Storage, rest.Storage, error) {
 	return &bs, &StatusREST{&statusStore}, nil
 }
 
+type bindingStorage struct {
+	*registry.Store
+}
+
+func (bs *bindingStorage) Delete(ctx genericapirequest.Context, name string, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
+	fmt.Println("yolo all the time deleting things")
+	return nil, false, nil
+}
+
+func checkStorage(store registry.Store) bool {
+	var _ rest.StandardStorage = &store
+	//	_, compliesWithStandardStorageInterface := (&store).(rest.StandardStorage)
+	//	return compliesWithStandardStorageInterface
+	return true
+}
+
 // StatusREST defines the REST operations for the status subresource via
 // implementation of various rest interfaces.  It supports the http verbs GET,
 // PATCH, and PUT.
 type StatusREST struct {
-	*registry.Store
+	store *registry.Store
 }
 
 // New returns a new ServiceBinding.
 func (r *StatusREST) New() runtime.Object {
-	return EmptyObject()
+	return &servicecatalog.ServiceBinding{}
 }
 
 // Get retrieves the object from the storage. It is required to support Patch
 // and to implement the rest.Getter interface.
 func (r *StatusREST) Get(ctx genericapirequest.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	return r.Store.Get(ctx, name, options)
+	return r.store.Get(ctx, name, options)
 }
 
 // Update alters the status subset of an object and implements the rest.Updater
 // interface.
 func (r *StatusREST) Update(ctx genericapirequest.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc) (runtime.Object, bool, error) {
-	return r.Store.Update(ctx, name, objInfo, createValidation, updateValidation)
+	return r.store.Update(ctx, name, objInfo, createValidation, updateValidation)
 }

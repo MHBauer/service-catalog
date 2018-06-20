@@ -71,5 +71,6 @@ NO_TTY=1 kubectl delete -f contrib/examples/apiserver/clusterserviceplan.yaml
 NO_TTY=1 kubectl delete -f contrib/examples/apiserver/serviceplan.yaml
 NO_TTY=1 kubectl delete -f contrib/examples/apiserver/instance.yaml
 NO_TTY=1 kubectl delete -f contrib/examples/apiserver/binding.yaml
+NO_TTY=1 kubectl get servicebinding test-binding --namespace test-ns -o yaml
 NO_TTY=1 kubectl delete -f contrib/examples/apiserver/podpreset.yaml
 set +x

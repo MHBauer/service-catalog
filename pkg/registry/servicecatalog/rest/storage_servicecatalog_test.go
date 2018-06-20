@@ -17,6 +17,7 @@ limitations under the License.
 package rest
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/kubernetes-incubator/service-catalog/pkg/registry/servicecatalog/server"
@@ -91,24 +92,41 @@ func TestV1Beta1Storage(t *testing.T) {
 		if !storageExists {
 			t.Fatalf("no storage found for %q", s)
 		}
-		t.Logf("%+v", storage)
+		t.Logf("%q %+v", s, storage)
+		if _, isStandardStorage := storage.(rest.Storage); !isStandardStorage {
+			t.Errorf("%q isn't even a storage", s)
+			continue
+		}
+
+		if strings.Contains(s, "status") {
+			// check that status is only GET & UPDATE
+			if _, isStandardStorage := storage.(rest.Getter); !isStandardStorage {
+				t.Errorf("not compliant to getter interface for %q", s)
+			}
+			if _, isStandardStorage := storage.(rest.Updater); !isStandardStorage {
+				t.Errorf("not compliant to updater interface for %q", s)
+			}
+			continue
+		}
+
 		if _, isStandardStorage := storage.(rest.Creater); !isStandardStorage {
-			t.Fatalf("not compliant to ocreater interface for %q", s)
+			t.Errorf("not compliant to creater interface for %q", s)
 		}
 		if _, isStandardStorage := storage.(rest.Lister); !isStandardStorage {
-			t.Fatalf("not compliant to standardStorage interface for %q", s)
+			t.Errorf("not compliant to lister interface for %q", s)
 		}
 		if _, isStandardStorage := storage.(rest.GracefulDeleter); !isStandardStorage {
-			t.Fatalf("not compliant to standardStorage interface for %q", s)
+			t.Errorf("not compliant to graceful deleter interface for %q", s)
 		}
 		if _, isStandardStorage := storage.(rest.CollectionDeleter); !isStandardStorage {
-			t.Fatalf("not compliant to standardStorage interface for %q", s)
+			t.Errorf("not compliant to collection deleter interface for %q", s)
 		}
 		if _, isStandardStorage := storage.(rest.Watcher); !isStandardStorage {
-			t.Fatalf("not compliant to standardStorage interface for %q", s)
+			t.Errorf("not compliant to watcher interface for %q", s)
 		}
 		if _, isStandardStorage := storage.(rest.StandardStorage); !isStandardStorage {
-			t.Fatalf("not compliant to standardStorage interface for %q", s)
+			t.Errorf("not compliant to standardStorage interface for %q", s)
 		}
 	}
+
 }
