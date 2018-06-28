@@ -153,10 +153,12 @@ func NewStorage(opts server.Options) (rest.Storage, rest.Storage, error) {
 		panic(err) // TODO: Propagate error up
 	}
 
+	interceptedStore := DeleteInterceptREST{&store}
+
 	statusStore := store
 	statusStore.UpdateStrategy = bindingStatusUpdateStrategy
 
-	return &store, &StatusREST{&statusStore}, nil
+	return &interceptedStore, &StatusREST{&statusStore}, nil
 }
 
 // StatusREST defines the REST operations for the status subresource via
@@ -187,4 +189,39 @@ func (r *StatusREST) Get(ctx context.Context, name string, options *metav1.GetOp
 // interface.
 func (r *StatusREST) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc) (runtime.Object, bool, error) {
 	return r.store.Update(ctx, name, objInfo, createValidation, updateValidation)
+}
+
+type DeleteInterceptREST struct {
+	*registry.Store
+}
+
+var (
+	_ rest.Storage         = &DeleteInterceptREST{}
+	_ rest.GracefulDeleter = &DeleteInterceptREST{}
+)
+
+func (r *DeleteInterceptREST) New() runtime.Object {
+	return EmptyObject()
+}
+
+func (r *DeleteInterceptREST) Delete(ctx context.Context, name string, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
+
+	return nil, false, nil
+}
+
+type DeleteREST struct {
+}
+
+var (
+	_ rest.Storage         = &DeleteREST{}
+	_ rest.GracefulDeleter = &DeleteREST{}
+)
+
+func (r *DeleteREST) New() runtime.Object {
+	return EmptyObject()
+}
+
+func (r *DeleteREST) Delete(ctx context.Context, name string, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
+
+	return nil, false, nil
 }
