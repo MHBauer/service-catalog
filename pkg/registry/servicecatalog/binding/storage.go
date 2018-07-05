@@ -112,7 +112,7 @@ func GetAttrs(obj runtime.Object) (labels.Set, fields.Set, bool, error) {
 
 // NewStorage creates a new rest.Storage responsible for accessing ServiceBinding
 // resources
-func NewStorage(opts server.Options) (rest.Storage, rest.Storage, error) {
+func NewStorage(opts server.Options) (rest.Storage, rest.Storage, rest.Storage, error) {
 	prefix := "/" + opts.ResourcePrefix()
 
 	storageInterface, dFunc := opts.GetStorage(
@@ -154,11 +154,12 @@ func NewStorage(opts server.Options) (rest.Storage, rest.Storage, error) {
 	}
 
 	interceptedStore := DeleteInterceptREST{&store}
+	deleteStore := DeleteREST{&store}
 
 	statusStore := store
 	statusStore.UpdateStrategy = bindingStatusUpdateStrategy
 
-	return &interceptedStore, &StatusREST{&statusStore}, nil
+	return &interceptedStore, &StatusREST{&statusStore}, &deleteStore, nil
 }
 
 // StatusREST defines the REST operations for the status subresource via
@@ -197,6 +198,7 @@ type DeleteInterceptREST struct {
 
 var (
 	_ rest.Storage         = &DeleteInterceptREST{}
+	_ rest.StandardStorage = &DeleteInterceptREST{}
 	_ rest.GracefulDeleter = &DeleteInterceptREST{}
 )
 
@@ -204,12 +206,15 @@ func (r *DeleteInterceptREST) New() runtime.Object {
 	return EmptyObject()
 }
 
+// Delete avoids standard kube delete functionality
 func (r *DeleteInterceptREST) Delete(ctx context.Context, name string, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
 
 	return nil, false, nil
 }
 
+// DeleteREST is type that only supports deleting
 type DeleteREST struct {
+	delete *registry.Store
 }
 
 var (
@@ -217,11 +222,12 @@ var (
 	_ rest.GracefulDeleter = &DeleteREST{}
 )
 
+// New is necessary to implement storage
 func (r *DeleteREST) New() runtime.Object {
 	return EmptyObject()
 }
 
+// Delete is a passthrough to the underlying delete logic
 func (r *DeleteREST) Delete(ctx context.Context, name string, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
-
-	return nil, false, nil
+	return r.delete.Delete(ctx, name, options)
 }

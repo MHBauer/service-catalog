@@ -163,7 +163,7 @@ func (p StorageProvider) v1beta1Storage(
 	clusterServiceClassStorage, clusterServiceClassStatusStorage := clusterserviceclass.NewStorage(*clusterServiceClassOpts)
 	clusterServicePlanStorage, clusterServicePlanStatusStorage := clusterserviceplan.NewStorage(*clusterServicePlanOpts)
 	instanceStorage, instanceStatusStorage, instanceReferencesStorage := instance.NewStorage(*instanceOpts)
-	bindingStorage, bindingStatusStorage, err := binding.NewStorage(*bindingsOpts)
+	bindingStorage, bindingStatusStorage, d, err := binding.NewStorage(*bindingsOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -180,6 +180,7 @@ func (p StorageProvider) v1beta1Storage(
 		"serviceinstances/reference":   instanceReferencesStorage,
 		"servicebindings":              bindingStorage,
 		"servicebindings/status":       bindingStatusStorage,
+		"servicebindings/delete":       d,
 	}
 
 	if utilfeature.DefaultFeatureGate.Enabled(scfeatures.NamespacedServiceBroker) {
