@@ -28,10 +28,13 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/generic"
 	"k8s.io/apiserver/pkg/registry/generic/registry"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/apiserver/pkg/storage"
+	storeerr "k8s.io/apiserver/pkg/storage/errors"
 )
 
 var (
@@ -208,8 +211,64 @@ func (r *DeleteInterceptREST) New() runtime.Object {
 
 // Delete avoids standard kube delete functionality
 func (r *DeleteInterceptREST) Delete(ctx context.Context, name string, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
+	key, err := r.KeyFunc(ctx, name)
+	if err != nil {
+		return nil, false, err
+	}
+	obj := r.NewFunc()
+	// seems bizzare to pull this out of the context by the time we're here
+	var qualifiedResource schema.GroupResource
+	if info, ok := genericapirequest.RequestInfoFrom(ctx); ok {
+		qualifiedResource = schema.GroupResource{Group: info.APIGroup, Resource: info.Resource}
+		// these kind of have to be the same...
+		// TODO investigate upstream code history
+		// glog.Infof("is this ever set %+v", qualifiedResource)
+		// glog.Infof("default could is %+v", r.DefaultQualifiedResource)
+	} else {
+		qualifiedResource = r.DefaultQualifiedResource
+	}
 
-	return nil, false, nil
+	if err := r.Storage.Get(ctx, key, "", obj, false); err != nil {
+		return nil, false, storeerr.InterpretDeleteError(err, qualifiedResource, name)
+	}
+
+	if binding, ok := obj.(*servicecatalog.ServiceBinding); ok {
+		// write object with delete field back to storage
+		/*
+			var preconditions storage.Preconditions
+			var out runtime.Object
+			err = r.Storage.GuaranteedUpdate(
+				ctx,
+				key,
+				out,
+				false, // ignoreNotFound
+				&preconditions,
+				storage.SimpleUpdate(func(existing runtime.Object) (runtime.Object, error) {
+					existingAccessor, err := meta.Accessor(existing)
+					if err != nil {
+						return nil, err
+					}
+					lastExisting = existing
+					return existing, nil
+				}),
+			)
+			switch err {
+			case nil:
+				// If we are here, the registry supports grace period mechanism and
+				// we are intentionally delete gracelessly. In this case, we may
+				// enter a race with other k8s components. If other component wins
+				// the race, the object will not be found, and we should tolerate
+				// the NotFound error. See
+				// https://github.com/kubernetes/kubernetes/issues/19403 for
+				// details.
+				return nil, true, true, out, lastExisting
+			default:
+				return storeerr.InterpretUpdateError(err, qualifiedResource, name), false, false, out, lastExisting
+			}
+		*/
+		return binding, false, nil
+	}
+	return nil, false, fmt.Errorf("we didn't get a binding to delete")
 }
 
 // DeleteREST is type that only supports deleting
@@ -220,6 +279,8 @@ type DeleteREST struct {
 var (
 	_ rest.Storage         = &DeleteREST{}
 	_ rest.GracefulDeleter = &DeleteREST{}
+	// we're explicitly not a standard storage and only support DELETE
+	// _ rest.StandardStorage = &DeleteREST{}
 )
 
 // New is necessary to implement storage
