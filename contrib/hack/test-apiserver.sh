@@ -60,7 +60,11 @@ sleep 15
 # check that we have no deletion timestamp
 # this would instead now have our delete-flag set
 NO_TTY=1 kubectl get servicebinding test-binding --namespace test-ns -o yaml
-curl -k -v -XGET  -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "User-Agent: kubectl/v1.6.6 (linux/amd64) kubernetes/7fa1c17" -H "Accept: application/json" -H "Content-Type: application/json" https://localhost:${PORT}/apis/servicecatalog.k8s.io/v1beta1/namespaces/test-ns/servicebindings/test-binding/status
+
+
+# priming understanding as this GET is on STATUS, not the whole spec.
+curl -k -v -XGET  -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "User-Agent: kubectl" -H "Accept: application/json" -H "Content-Type: application/json" \
+     https://localhost:${PORT}/apis/servicecatalog.k8s.io/v1beta1/namespaces/test-ns/servicebindings/test-binding/status
 
 # now the controller would do reconsiation and try to delete the backing broker.
 # can be intercepted to turn off the flag if we haven't passed a point.
@@ -69,7 +73,8 @@ curl -k -v -XGET  -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "User-Agent: kub
 
 # do the actual delete on the special resource.
 # this is what our modified controller would do.
-curl -k -v -XDELETE  -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "User-Agent: kubectl/v1.6.6 (linux/amd64) kubernetes/7fa1c17" -H "Accept: application/json" -H "Content-Type: application/json" https://localhost:${PORT}/apis/servicecatalog.k8s.io/v1beta1/namespaces/test-ns/servicebindings/test-binding/delete
+curl -k -v -XDELETE  -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "User-Agent: kubectl" -H "Accept: application/json" -H "Content-Type: application/json" \
+     https://localhost:${PORT}/apis/servicecatalog.k8s.io/v1beta1/namespaces/test-ns/servicebindings/test-binding/delete
 
 sleep 15
 # see that the deletion timestamp is set now.
