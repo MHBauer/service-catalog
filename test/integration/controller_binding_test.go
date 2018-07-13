@@ -70,6 +70,36 @@ func TestCreateServiceBindingSuccess(t *testing.T) {
 	}
 }
 
+// TestCreateServiceBindingSuccessDelete successful paths binding
+func TestCreateServiceBindingSuccessDelete(t *testing.T) {
+	cases := []struct {
+		name string
+	}{
+		{
+			name: "defaults",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ct := &controllerTest{
+				t:        t,
+				broker:   getTestBroker(),
+				instance: getTestInstance(),
+				binding:  getTestBinding(),
+			}
+			ct.run(func(ct *controllerTest) {
+				condition := v1beta1.ServiceBindingCondition{
+					Type:   v1beta1.ServiceBindingConditionReady,
+					Status: v1beta1.ConditionTrue,
+				}
+				if cond, err := util.WaitForBindingCondition(ct.client, testNamespace, testBindingName, condition); err != nil {
+					t.Fatalf("error waiting for binding condition: %v\n"+"expecting: %+v\n"+"last seen: %+v", err, condition, cond)
+				}
+			})
+		})
+	}
+}
+
 // TestCreateServiceBindingInvalidInstanceFailure try to bind to invalid service instance names
 func TestCreateServiceBindingInvalidInstanceFailure(t *testing.T) {
 	cases := []struct {

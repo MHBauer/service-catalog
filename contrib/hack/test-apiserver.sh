@@ -50,13 +50,23 @@ NO_TTY=1 kubectl create -f contrib/examples/apiserver/binding.yaml
 # make sure it's still there
 NO_TTY=1 kubectl get servicebinding test-binding --namespace test-ns -o yaml
 
-sleep 15
+sleep 5
+echo ""
+echo ""
+echo ""
+echo ""
+
 
 # call delete
 NO_TTY=1 kubectl delete -v 9 -f contrib/examples/apiserver/binding.yaml
 
 
-sleep 15
+sleep 5
+echo ""
+echo ""
+echo ""
+echo ""
+
 # check that we have no deletion timestamp
 # this would instead now have our delete-flag set
 NO_TTY=1 kubectl get servicebinding test-binding --namespace test-ns -o yaml
@@ -76,7 +86,11 @@ curl -k -v -XGET  -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "User-Agent: kub
 curl -k -v -XDELETE  -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "User-Agent: kubectl" -H "Accept: application/json" -H "Content-Type: application/json" \
      https://localhost:${PORT}/apis/servicecatalog.k8s.io/v1beta1/namespaces/test-ns/servicebindings/test-binding/delete
 
-sleep 15
+sleep 5
+echo ""
+echo ""
+echo ""
+echo ""
 # see that the deletion timestamp is set now.
 NO_TTY=1 kubectl get servicebinding test-binding --namespace test-ns -o yaml
 

@@ -1083,6 +1083,9 @@ type ServiceBindingSpec struct {
 	UserInfo *UserInfo
 }
 
+// SecretNameKey exists for
+const SecretNameKey string = "just-delete-my-stuff-up"
+
 // ServiceBindingStatus represents the current status of a ServiceBinding.
 type ServiceBindingStatus struct {
 	Conditions []ServiceBindingCondition

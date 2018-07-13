@@ -25,6 +25,7 @@ import (
 	osb "github.com/pmorie/go-open-service-broker-client/v2"
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
 
+	"github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog"
 	"github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1beta1"
 	scfeatures "github.com/kubernetes-incubator/service-catalog/pkg/features"
 	"github.com/kubernetes-incubator/service-catalog/pkg/pretty"
@@ -145,7 +146,8 @@ func getReconciliationActionForServiceBinding(binding *v1beta1.ServiceBinding) R
 	switch {
 	case binding.Status.AsyncOpInProgress:
 		return reconcilePoll
-	case binding.ObjectMeta.DeletionTimestamp != nil || binding.Status.OrphanMitigationInProgress:
+	case binding.Spec.SecretName == servicecatalog.SecretNameKey || binding.ObjectMeta.DeletionTimestamp != nil || binding.Status.OrphanMitigationInProgress:
+		glog.V(6).Info("binding.Spec.SecretName set to %+v", binding.Spec.SecretName)
 		return reconcileDelete
 	default:
 		return reconcileAdd
@@ -164,6 +166,10 @@ func (c *controller) reconcileServiceBinding(binding *v1beta1.ServiceBinding) er
 	case reconcileAdd:
 		return c.reconcileServiceBindingAdd(binding)
 	case reconcileDelete:
+		if binding.Spec.SecretName == servicecatalog.SecretNameKey {
+			return c.doSpecialDelete(binding)
+		}
+
 		return c.reconcileServiceBindingDelete(binding)
 	case reconcilePoll:
 		return c.pollServiceBinding(binding)
@@ -482,6 +488,14 @@ func (c *controller) reconcileServiceBindingDelete(binding *v1beta1.ServiceBindi
 	}
 
 	return c.processUnbindSuccess(binding)
+}
+
+func (c *controller) doSpecialDelete(binding *v1beta1.ServiceBinding) error {
+	var err error
+	binding = binding.DeepCopy()
+	glog.V(4).Info("doing special delete")
+	_, err = c.serviceCatalogClient.ServiceBindings(binding.Namespace).SpecialDelete(binding)
+	return err
 }
 
 // isClusterServicePlanBindable returns whether the given ClusterServiceClass and ClusterServicePlan

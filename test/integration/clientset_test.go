@@ -27,6 +27,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/golang/glog"
 	"github.com/kubernetes-incubator/service-catalog/pkg/registry/servicecatalog/server"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -1187,8 +1188,22 @@ func testBindingClient(sType server.StorageType, client servicecatalogclient.Int
 		return fmt.Errorf("Didn't get matching ready conditions:\nexpected: %v\n\ngot: %v", e, a)
 	}
 
+	// standard delete should now change the secret name
 	if err = bindingClient.Delete(name, &metav1.DeleteOptions{}); nil != err {
 		return fmt.Errorf("binding delete failed (%s)", err)
+	}
+
+	bindingServer, err = bindingClient.Get(name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("error getting binding: %v", err)
+	}
+
+	if bindingServer.Spec.SecretName != servicecatalog.SecretNameKey {
+		return fmt.Errorf(
+			"didn't get the right secret name back from the server \n%+v\n%+v",
+			servicecatalog.SecretNameKey,
+			bindingServer.Spec.SecretName,
+		)
 	}
 
 	bindingDeleted, err := bindingClient.Get(name, metav1.GetOptions{})
@@ -1200,6 +1215,20 @@ func testBindingClient(sType server.StorageType, client servicecatalogclient.Int
 	bindingDeleted.ObjectMeta.Finalizers = nil
 	if _, err := bindingClient.UpdateStatus(bindingDeleted); err != nil {
 		return fmt.Errorf("error updating binding status (%s)", err)
+	}
+
+	glog.Infof("binding before special delete %q", bindingDeleted)
+
+	bindingServer, err = bindingClient.SpecialDelete(binding)
+	if err != nil {
+		return fmt.Errorf("error special deleting binding: %v", err)
+	}
+
+	glog.Infof("binding before special delete %q", bindingServer)
+
+	bindingDeleted, err = bindingClient.Get(name, metav1.GetOptions{})
+	if nil != err {
+		return fmt.Errorf("binding should still exist on initial get (%s)", err)
 	}
 
 	if bindingDeleted, err := bindingClient.Get(name, metav1.GetOptions{}); err == nil {

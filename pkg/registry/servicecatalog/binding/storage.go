@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/golang/glog"
 	scmeta "github.com/kubernetes-incubator/service-catalog/pkg/api/meta"
 	"github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog"
 	"github.com/kubernetes-incubator/service-catalog/pkg/registry/servicecatalog/server"
@@ -234,40 +235,42 @@ func (r *DeleteInterceptREST) Delete(ctx context.Context, name string, options *
 
 	if binding, ok := obj.(*servicecatalog.ServiceBinding); ok {
 		// write object with delete field back to storage
-		/*
-			var preconditions storage.Preconditions
-			var out runtime.Object
-			err = r.Storage.GuaranteedUpdate(
-				ctx,
-				key,
-				out,
-				false, // ignoreNotFound
-				&preconditions,
-				storage.SimpleUpdate(func(existing runtime.Object) (runtime.Object, error) {
-					existingAccessor, err := meta.Accessor(existing)
-					if err != nil {
-						return nil, err
-					}
-					lastExisting = existing
-					return existing, nil
-				}),
-			)
-			switch err {
-			case nil:
-				// If we are here, the registry supports grace period mechanism and
-				// we are intentionally delete gracelessly. In this case, we may
-				// enter a race with other k8s components. If other component wins
-				// the race, the object will not be found, and we should tolerate
-				// the NotFound error. See
-				// https://github.com/kubernetes/kubernetes/issues/19403 for
-				// details.
-				return nil, true, true, out, lastExisting
-			default:
-				return storeerr.InterpretUpdateError(err, qualifiedResource, name), false, false, out, lastExisting
-			}
-		*/
-		return binding, false, nil
+
+		var preconditions storage.Preconditions
+		var lastExisting runtime.Object
+		err = r.Storage.GuaranteedUpdate(
+			ctx,
+			key,
+			binding,
+			false, // ignoreNotFound
+			&preconditions,
+			storage.SimpleUpdate(func(existing runtime.Object) (runtime.Object, error) {
+
+				if binding, ok := existing.(*servicecatalog.ServiceBinding); ok {
+					glog.Errorf("binding %+v", binding.Spec.SecretName)
+				}
+				lastExisting = existing
+
+				binding.Spec.SecretName = servicecatalog.SecretNameKey
+
+				return binding, nil
+			}),
+		)
+		switch err {
+		case nil:
+			// If we are here, the registry supports grace period mechanism and
+			// we are intentionally delete gracelessly. In this case, we may
+			// enter a race with other k8s components. If other component wins
+			// the race, the object will not be found, and we should tolerate
+			// the NotFound error. See
+			// https://github.com/kubernetes/kubernetes/issues/19403 for
+			// details.
+			return lastExisting, false, nil
+		default:
+			return lastExisting, false, storeerr.InterpretUpdateError(err, qualifiedResource, name)
+		}
 	}
+	glog.Errorf("we got a non-binding to delete somehow %+v", obj)
 	return nil, false, fmt.Errorf("we didn't get a binding to delete")
 }
 
