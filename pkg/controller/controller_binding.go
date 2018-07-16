@@ -166,11 +166,10 @@ func (c *controller) reconcileServiceBinding(binding *v1beta1.ServiceBinding) er
 	case reconcileAdd:
 		return c.reconcileServiceBindingAdd(binding)
 	case reconcileDelete:
-		if binding.Spec.SecretName == servicecatalog.SecretNameKey {
-			return c.doSpecialDelete(binding)
+		if binding.DeletionTimestamp != nil {
+			return c.reconcileServiceBindingDelete(binding)
 		}
-
-		return c.reconcileServiceBindingDelete(binding)
+		return c.doSpecialDelete(binding)
 	case reconcilePoll:
 		return c.pollServiceBinding(binding)
 	default:
