@@ -161,14 +161,17 @@ func (c *controller) reconcileServiceBinding(binding *v1beta1.ServiceBinding) er
 	pcb := pretty.NewBindingContextBuilder(binding)
 	glog.V(6).Info(pcb.Messagef(`beginning to process resourceVersion: %v`, binding.ResourceVersion))
 
+	// our first run through here will have the flag set (changed the secret name for PoC)
 	reconciliationAction := getReconciliationActionForServiceBinding(binding)
 	switch reconciliationAction {
 	case reconcileAdd:
 		return c.reconcileServiceBindingAdd(binding)
 	case reconcileDelete:
+		// on the first trip through, the deletion timestamp is not set
 		if binding.DeletionTimestamp != nil {
 			return c.reconcileServiceBindingDelete(binding)
 		}
+		// this should set the deletion timestamp if broker comms succeed
 		return c.doSpecialDelete(binding)
 	case reconcilePoll:
 		return c.pollServiceBinding(binding)
@@ -493,7 +496,10 @@ func (c *controller) doSpecialDelete(binding *v1beta1.ServiceBinding) error {
 	var err error
 	binding = binding.DeepCopy()
 	glog.V(4).Info("doing special delete")
+	// put all the broker communication in here and wipe the flag/whatever if it fails
+
 	// we're done with it now, delete it immediately.
+	// this sets the deletion timestamp
 	err = c.serviceCatalogClient.ServiceBindings(binding.Namespace).SpecialDelete(binding.Name, &metav1.DeleteOptions{})
 	return err
 }
