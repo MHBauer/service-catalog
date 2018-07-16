@@ -1211,29 +1211,28 @@ func testBindingClient(sType server.StorageType, client servicecatalogclient.Int
 		return fmt.Errorf("binding should still exist on initial get (%s)", err)
 	}
 
-	fmt.Printf("-----\nclientset_test\n\nbinding deleted: %#v\n\n", *bindingDeleted)
-	bindingDeleted.ObjectMeta.Finalizers = nil
-	if _, err := bindingClient.UpdateStatus(bindingDeleted); err != nil {
-		return fmt.Errorf("error updating binding status (%s)", err)
-	}
-
 	glog.Infof("binding before special delete %q", bindingDeleted)
 
-	bindingServer, err = bindingClient.SpecialDelete(binding)
-	if err != nil {
+	if err = bindingClient.SpecialDelete(name, &metav1.DeleteOptions{}); nil != err {
 		return fmt.Errorf("error special deleting binding: %v", err)
 	}
 
-	glog.Infof("binding before special delete %q", bindingServer)
+	glog.Infof("binding after special delete %q", bindingServer)
 
 	bindingDeleted, err = bindingClient.Get(name, metav1.GetOptions{})
 	if nil != err {
 		return fmt.Errorf("binding should still exist on initial get (%s)", err)
 	}
 
+	fmt.Printf("-----\nclientset_test\n\nbinding deleted: %#v\n\n", *bindingDeleted)
+	bindingDeleted.ObjectMeta.Finalizers = nil
+	if _, err := bindingClient.UpdateStatus(bindingDeleted); err != nil {
+		return fmt.Errorf("error updating binding status (%s)", err)
+	}
+
 	if bindingDeleted, err := bindingClient.Get(name, metav1.GetOptions{}); err == nil {
 		return fmt.Errorf(
-			"binding should be deleted after finalizers cleared. got binding %#v",
+			"binding should be deleted after finalizers cleared.ngot binding \n%#v",
 			*bindingDeleted,
 		)
 	}

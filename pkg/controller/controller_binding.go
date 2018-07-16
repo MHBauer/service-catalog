@@ -494,7 +494,8 @@ func (c *controller) doSpecialDelete(binding *v1beta1.ServiceBinding) error {
 	var err error
 	binding = binding.DeepCopy()
 	glog.V(4).Info("doing special delete")
-	_, err = c.serviceCatalogClient.ServiceBindings(binding.Namespace).SpecialDelete(binding)
+	// we're done with it now, delete it immediately.
+	err = c.serviceCatalogClient.ServiceBindings(binding.Namespace).SpecialDelete(binding.Name, &metav1.DeleteOptions{})
 	return err
 }
 

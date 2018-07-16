@@ -17,26 +17,24 @@ limitations under the License.
 package v1beta1
 
 import (
-	"github.com/golang/glog"
-	"github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1beta1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// The ReferencesExtension interface allows setting the References
-// to ServiceClasses and ServicePlans.
+// The ReferencesExtension interface allows setting the References to
+// ServiceClasses and ServicePlans.
 type ServiceBindingExpansion interface {
-	SpecialDelete(serviceInstance *v1beta1.ServiceBinding) (*v1beta1.ServiceBinding, error)
+	SpecialDelete(name string, options *v1.DeleteOptions) error
 }
 
-func (c *serviceBindings) SpecialDelete(serviceBinding *v1beta1.ServiceBinding) (result *v1beta1.ServiceBinding, err error) {
-	result = &v1beta1.ServiceBinding{}
-	glog.Infof("request ns %q", c.ns)
-	err = c.client.Delete().
+// Delete takes name of the serviceBinding and deletes it. Returns an error if
+// one occurs.
+func (c *serviceBindings) SpecialDelete(name string, options *v1.DeleteOptions) error {
+	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("servicebindings").
-		Name(serviceBinding.Name).
+		Name(name).
 		SubResource("delete").
-		Body(result).
+		Body(options).
 		Do().
-		Into(result)
-	return
+		Error()
 }
