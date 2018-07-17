@@ -76,6 +76,19 @@ NO_TTY=1 kubectl get servicebinding test-binding --namespace test-ns -o yaml
 curl -k -v -XGET  -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "User-Agent: kubectl" -H "Accept: application/json" -H "Content-Type: application/json" \
      https://localhost:${PORT}/apis/servicecatalog.k8s.io/v1beta1/namespaces/test-ns/servicebindings/test-binding/status
 
+
+# try and update status
+curl -k -v -XPUT  -H "Authorization: Basic YWRtaW46YWRtaW4=" \
+     -H "User-Agent: kubectl" -H "Accept: application/json" \
+     -H "Content-Type: application/json" --data '{"kind":"ServiceBinding","apiVersion":"servicecatalog.k8s.io/v1beta1","metadata":{"name":"test-binding","namespace":"test-ns","selfLink":"/apis/servicecatalog.k8s.io/v1beta1/namespaces/test-ns/servicebindings/test-binding/status","uid":"292e9b62-8987-11e8-b81e-0242ac110003","resourceVersion":"3","generation":1,"creationTimestamp":"2018-07-17T06:03:43Z","finalizers":["kubernetes-incubator/service-catalog"]},"spec":{"instanceRef":{"name":"test-instance"},"secretName":"just-delete-my-stuff-up","externalID":"292e9b16-8987-11e8-b81e-0242ac110003"},"status":{"conditions":[],"asyncOpInProgress":false,"reconciledGeneration":0,"orphanMitigationInProgress":false,"unbindStatus":"NotRequired"}}' \
+     https://localhost:${PORT}/apis/servicecatalog.k8s.io/v1beta1/namespaces/test-ns/servicebindings/test-binding/status
+
+
+
+# priming understanding as this GET is on STATUS, not the whole spec.
+curl -k -v -XGET  -H "Authorization: Basic YWRtaW46YWRtaW4=" -H "User-Agent: kubectl" -H "Accept: application/json" -H "Content-Type: application/json" \
+     https://localhost:${PORT}/apis/servicecatalog.k8s.io/v1beta1/namespaces/test-ns/servicebindings/test-binding/status
+
 # now the controller would do reconsiation and try to delete the backing broker.
 # can be intercepted to turn off the flag if we haven't passed a point.
 # failure can timeout and automatically roll back.

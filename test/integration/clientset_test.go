@@ -1225,6 +1225,18 @@ func testBindingClient(sType server.StorageType, client servicecatalogclient.Int
 	}
 
 	fmt.Printf("-----\nclientset_test\n\nbinding deleted: %#v\n\n", *bindingDeleted)
+	//bindingDeleted.Status.CurrentOperation = "Unbind"
+	bindingDeleted.Status.OrphanMitigationInProgress = true
+	if _, err := bindingClient.UpdateStatus(bindingDeleted); err != nil {
+		return fmt.Errorf("error updating binding status (%s)", err)
+	}
+
+	bindingDeleted, err = bindingClient.Get(name, metav1.GetOptions{})
+	if nil != err {
+		return fmt.Errorf("binding should still exist on initial get (%s)", err)
+	}
+
+	fmt.Printf("-----\nclientset_test\n\nbinding deleted: %#v\n\n", *bindingDeleted)
 	bindingDeleted.ObjectMeta.Finalizers = nil
 	if _, err := bindingClient.UpdateStatus(bindingDeleted); err != nil {
 		return fmt.Errorf("error updating binding status (%s)", err)
